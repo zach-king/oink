@@ -1,12 +1,10 @@
 # Oink
 
-A CLI budgeting tool for nerds.
-
-Files are stored in a directory of your choice (hint: Dropbox). All files are in 
-JSON format and can easily be parsed by other tools.
+A CLI budgeting tool for nerds. Uses a sqlite3 db stored in the folder of your
+choice (hint: Dropbox).
 
  
-## Sections
+ ## Sections
 
 These are the general "sections" of the tool that are available to you. Each
 have their own set of commands.
@@ -48,4 +46,3 @@ Type `?` at any time to see the current sections available commands.
     - `confirm` - Start confirming unconfirmed transactions
 - `reports` - Go to reports section
     - TODO
-
