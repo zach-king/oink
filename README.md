@@ -4,7 +4,7 @@ A CLI budgeting tool for nerds. Uses a sqlite3 db stored in the folder of your
 choice (hint: Dropbox).
 
  
- ## Sections
+## Sections
 
 These are the general "sections" of the tool that are available to you. Each
 have their own set of commands.
