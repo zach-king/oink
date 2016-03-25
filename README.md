@@ -3,6 +3,8 @@
 A CLI budgeting tool for nerds. Uses a sqlite3 db stored in the folder of your
 choice (hint: Dropbox).
 
+Currently only supports Python 3.x
+
  
 ## Sections
 
