@@ -28,8 +28,8 @@ def main():
 def welcome():
     menu.clear_screen()
 
-    print(TITLE)
-    print('Welcome to Oink, the CLI budgeting tool for nerds!')
+    print(TITLE.strip())
+    print('\nWelcome to Oink, the CLI budgeting tool for nerds!')
     print('Type ? to any time to see what commands are available.')
 
     menu.register_view('accounts', 'View and manage accounts', accounts.commands)

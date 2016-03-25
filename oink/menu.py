@@ -41,20 +41,25 @@ def show():
     Display sections and commands available. Wait for a valid command.
 
     """
-    print('\nViews')
+    print('Views')
     print('-' * 40)
 
+    def print_cmd(name, help_text):
+        print('{0}{1}'.format(name.ljust(16), help_text))
+
     for name, details in views.items():
-        print('{0}\t{1}'.format(name.ljust(12), details['help_text']))
+        print_cmd(name, details['help_text'])
+
+    print('\nCommands')
+    print('-' * 40)
 
     if current_view:
         commands = views[current_view]['commands']
 
-        print('\nCommands')
-        print('-' * 40)
-
         for command in commands:
-            print('{0}\t{1}'.format(command[0].ljust(12), command[1]))
+            print_cmd(command[0], command[1])
+
+    print_cmd('exit', 'Exit Oink')
 
 
 def clear_screen():
