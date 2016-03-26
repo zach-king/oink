@@ -42,3 +42,9 @@ __Transactions__
 __Reports__
 
 TODO
+
+
+## TODO
+
+- Add color to output
+- Add support for command shortcuts (ex: `la` for `list accounts`)

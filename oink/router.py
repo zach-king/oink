@@ -80,8 +80,7 @@ def route(command):
 
                 return
 
-    print('[error] unkown command')
-
+    print('[error] unkown command, type "?" to see commands.')
 
 
 def show():
@@ -103,6 +102,7 @@ def wait():
 
     """
     while True:
+        print('') # Add some whitespace
         command = input('> ')
 
         if command == '?':

@@ -24,6 +24,16 @@ def main():
     installation_path = get_installation_path()
     db.path = os.path.join(installation_path, 'oink.db')
 
+    register_commands()
+    show_welcome_message()
+
+    try:
+        router.wait()
+    except KeyboardInterrupt:
+        quit_oink()
+
+
+def register_commands():
     router.register('ls accounts', 'List bank accounts', accounts.ls)
     router.register('add account', 'Add bank account', accounts.add)
     router.register('edit account <name>', 'Edit bank account', accounts.edit)
@@ -31,17 +41,14 @@ def main():
 
     router.register('quit', 'Quit Oink', quit_oink)
 
+
+def show_welcome_message():
     # Clear screen on initial startup
     os.system('clear' if os.name == 'posix' else 'clr')
 
     print(TITLE)
     print('Welcome to Oink, the CLI budgeting tools for nerds!')
     print('Type ? at any time to see what commands are available.')
-
-    try:
-        router.wait()
-    except KeyboardInterrupt:
-        quit_oink()
 
 
 def quit_oink(signal=None, frame=None):
