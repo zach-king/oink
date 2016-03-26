@@ -11,6 +11,10 @@ concept is complete.
 
 Type `?` at any time to see the current sections available commands.
 
+`<arg>` style arguments are required.
+
+`[arg]` style arguments are optional.
+
 __Accounts__
 
 - `ls accounts` - List all bank accounts and their details.
