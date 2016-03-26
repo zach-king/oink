@@ -48,3 +48,5 @@ TODO
 
 - Add color to output
 - Add support for command shortcuts (ex: `la` for `list accounts`)
+- Add tab completion to command input
+- Sort output of commands in their own headers when printing help (should look similar to README)
