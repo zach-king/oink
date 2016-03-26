@@ -1,8 +1,14 @@
-def test():
-    print('Hello from test!')
+def ls(num=10):
+    print('TODO: list accounts {0}'.format(num))
 
 
-commands = (
-    ('test', 'A test thing', test),
-)
+def add():
+    print('TODO: add account')
 
+
+def edit(account_name):
+    print('TODO: edit account {0}'.format(account_name))
+
+
+def delete(account_name):
+    print('TODO: delete account {0}'.format(account_name))
