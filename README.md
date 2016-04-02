@@ -17,27 +17,27 @@ Type `?` at any time to see the current sections available commands.
 
 __Accounts__
 
-- `ls accounts` - List all bank accounts and their details.
-- `add account` - Add a new bank account.
-- `edit account <name>` - Edit a bank account.
-- `del account <name>` - Delete a bank account.
+- `la` - List all bank accounts and their details.
+- `aa` - Add a new bank account.
+- `ea <name>` - Edit a bank account.
+- `da <name>` - Delete a bank account.
 
 __Budget__
 
-- `ls budget [mm] [yyyy]` - List all budget categories for a month. Defaults to current month.
-- `add budget` - Add new budget category.
-- `set budget <category> <amount>` - Set budget category amount for the current month.
-- `edit budget <category>` - Change budget category name.
-- `del budget <category>` - Delete budget category.
+- `lb [mm] [yyyy]` - List all budget categories for a month. Defaults to current month.
+- `ab` - Add new budget category.
+- `sb <category> <amount>` - Set budget category amount for the current month.
+- `eb <category>` - Change budget category name.
+- `db <category>` - Delete budget category.
 
 __Transactions__
 
-- `ls trans [num]` - List [num] recent transactions from all accounts. Defaults to 10.
-- `ls trans <account> [num]` - List [num] recent transactions for account. Defaults to 10.
-- `add trans` - Add a new transaction.
-- `transfer` - Add transfer transaction between two accounts.
-- `edit trans <id>` - Edit a transaction.
-- `del trans <id>` - Delete a transaction.
+- `lt [num]` - List [num] recent transactions from all accounts. Defaults to 10.
+- `lt <account> [num]` - List [num] recent transactions for account. Defaults to 10.
+- `at` - Add a new transaction.
+- `ar` - Add transfer transaction between two accounts.
+- `et <id>` - Edit a transaction.
+- `dt <id>` - Delete a transaction.
 
 __Reports__
 

@@ -1,19 +1,23 @@
+import os
+
 import sqlite3
 
 
-path = None
 conn = None
-cursor = None
 
 
-def connect():
-    if not path:
-        raise Exception('Sqlite path not set')
+def connect(path):
+    global conn
+    conn = sqlite3.connect(os.path.join(path, 'oink.db'))
 
 
-def execute():
-    """
-    Lazy loads a sqlite3 connection and cursor.
+def cursor():
+    return conn.cursor()
 
-    """
-    pass
+
+def commit():
+    return conn.commit()
+
+
+def disconnect():
+    return conn.close()

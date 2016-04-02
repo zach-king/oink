@@ -83,7 +83,7 @@ def route(command):
     print('[error] unkown command, type "?" to see commands.')
 
 
-def show():
+def show_help():
     """
     Render commands to console.
 
@@ -106,7 +106,7 @@ def wait():
         command = input('> ')
 
         if command == '?':
-            show()
+            show_help()
 
         else:
             route(command)

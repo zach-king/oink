@@ -21,8 +21,12 @@ def main():
     Starting point. Ensures everything is setup and shows welcome message.
 
     """
+    global conn
+
     installation_path = get_installation_path()
-    db.path = os.path.join(installation_path, 'oink.db')
+    db.connect(installation_path)
+
+    accounts.setup()
 
     register_commands()
     show_welcome_message()
@@ -34,12 +38,12 @@ def main():
 
 
 def register_commands():
-    router.register('ls accounts', 'List bank accounts', accounts.ls)
-    router.register('add account', 'Add bank account', accounts.add)
-    router.register('edit account <name>', 'Edit bank account', accounts.edit)
-    router.register('del account <name>', 'Delete bank account', accounts.delete)
+    router.register('la', 'List bank accounts', accounts.ls)
+    router.register('aa', 'Add bank account', accounts.add)
+    router.register('ea <name>', 'Edit bank account', accounts.edit)
+    router.register('da <name>', 'Delete bank account', accounts.delete)
 
-    router.register('quit', 'Quit Oink', quit_oink)
+    router.register('q', 'Quit Oink', quit_oink)
 
 
 def show_welcome_message():
@@ -53,6 +57,7 @@ def show_welcome_message():
 
 def quit_oink(signal=None, frame=None):
     print('\nThanks for using Oink!')
+    db.disconnect()
     sys.exit(0)
 
 
