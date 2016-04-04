@@ -1,7 +1,7 @@
 import os
-import sys
 
-from . import accounts, db, router
+from . import data
+from . import handlers
 
 
 TITLE = '''
@@ -16,35 +16,50 @@ $$ |  $$ |$$ |$$ |  $$ |$$  _$$<
  '''
 
 
-def main():
+COMMANDS = [
+    ['ls', 'List budget', handlers.ls],
+    ['set', 'Set budget for a category', handlers.set],
+    ['track', 'Track expenses', handlers.track],
+    ['income', 'Add income', handlers.income],
+    ['quit', 'Save and quit', handlers.quit]
+]
+
+
+def init():
     """
     Starting point. Ensures everything is setup and shows welcome message.
 
     """
-    global conn
-
     installation_path = get_installation_path()
-    db.connect(installation_path)
-
-    accounts.setup()
-
-    register_commands()
+    # TODO get starting balance
+    data.load(installation_path)
     show_welcome_message()
-
     try:
-        router.wait()
+        listen()
     except KeyboardInterrupt:
-        quit_oink()
+        handlers.quit()
 
 
-def register_commands():
-    router.register('la', 'List bank accounts', accounts.ls)
-    router.register('aa', 'Add bank account', accounts.add)
-    router.register('ea <name>', 'Edit bank account', accounts.edit)
-    router.register('da <name>', 'Delete bank account', accounts.delete)
+def handle_command(command):
+    if command == '?':
+        for c in COMMANDS:
+            print('{0} | {1}'.format(c[0].ljust(6), c[1]))
 
-    router.register('q', 'Quit Oink', quit_oink)
+    else:
+        for c in COMMANDS:
+            if c[0] == command:
+                return c[2]()
 
+        print('Invalid command. Type ? to see whats available.')
+
+
+def listen():
+    while True:
+        print('') # Whitespace
+        command = input('> ')
+        print('') # More whitespace (oh baby!)
+        handle_command(command)
+                    
 
 def show_welcome_message():
     # Clear screen on initial startup
@@ -53,12 +68,6 @@ def show_welcome_message():
     print(TITLE)
     print('Welcome to Oink, the CLI budgeting tools for nerds!')
     print('Type ? at any time to see what commands are available.')
-
-
-def quit_oink(signal=None, frame=None):
-    print('\nThanks for using Oink!')
-    db.disconnect()
-    sys.exit(0)
 
 
 def get_installation_path():

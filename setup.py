@@ -7,7 +7,7 @@ setup(name='oink',
       author='Gavin Vickery',
       author_email='gavin@geekforbrains.com',
       entry_points = {
-        'console_scripts': ['oink=oink.cli:main'],
+        'console_scripts': ['oink=oink.main:init'],
       },
       license='MIT',
       packages=['oink'],
