@@ -1,10 +1,15 @@
+'''
+File: cli.py
+'''
+
+from __future__ import print_function
 import os
 import sys
 
 from . import accounts, db, router
 
 
-TITLE = '''
+TITLE = r'''
  $$$$$$\  $$\           $$\       
 $$  __$$\ \__|          $$ |      
 $$ /  $$ |$$\ $$$$$$$\  $$ |  $$\ 
@@ -38,6 +43,9 @@ def main():
 
 
 def register_commands():
+    '''
+    Registers all commands with the router class. See router.register() for details.
+    '''
     router.register('la', 'List bank accounts', accounts.list_accounts)
     router.register('aa', 'Add bank account', accounts.add)
     router.register('ea <name>', 'Edit bank account', accounts.edit)
@@ -48,6 +56,9 @@ def register_commands():
 
 
 def show_welcome_message():
+    '''
+    Clear screen and show the welcome to Oink message.
+    '''
     # Clear screen on initial startup
     os.system('clear' if os.name == 'posix' else 'clr')
 
@@ -57,25 +68,28 @@ def show_welcome_message():
 
 
 def quit_oink(signal=None, frame=None):
+    '''
+    Print a quit message, disconnect from the databse, and exit.
+    '''
     print('\nThanks for using Oink!')
     db.disconnect()
     sys.exit(0)
 
 
 def get_installation_path():
-    """
+    '''
     Get the oink.db sqlite3 file path from ~/.oink config file. If the config
     file doesn't exist, ask for an installation path and create new config.
 
     The ~/.oink config file consists of a single line of text, which is the full
     path the the oink.db file.
 
-    """
+    '''
     config_path = os.path.join(os.path.expanduser('~'), '.oink')
 
     if os.path.isfile(config_path):
-        with open(config_path, 'r') as f:
-            return f.read()
+        with open(config_path, 'r') as fin:
+            return fin.read()
 
     else:
         while True:
@@ -85,6 +99,6 @@ def get_installation_path():
                 print('That path doesn\'t exist.')
                 print('Please enter the full path to an existing folder.')
             else:
-                with open(config_path, 'w') as f:
-                    f.write(path)
+                with open(config_path, 'w') as fout:
+                    fout.write(path)
                 return path
