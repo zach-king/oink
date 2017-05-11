@@ -38,9 +38,10 @@ def main():
 
 
 def register_commands():
-    router.register('la', 'List bank accounts', accounts.ls)
+    router.register('la', 'List bank accounts', accounts.list_accounts)
     router.register('aa', 'Add bank account', accounts.add)
     router.register('ea <name>', 'Edit bank account', accounts.edit)
+    router.register('ra', 'Rename bank account', accounts.rename)
     router.register('da <name>', 'Delete bank account', accounts.delete)
 
     router.register('q', 'Quit Oink', quit_oink)
