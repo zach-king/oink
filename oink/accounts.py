@@ -126,7 +126,7 @@ def delete(account_name):
         count = cur.fetchone()[0]
         if count == 0:
             print('Sorry, no account was found by the name `{}`'.format(account_name))
-            continue
+            return
 
         # Delete the account
         cur.execute('DELETE FROM accounts WHERE name = "{}"'.format(account_name))
