@@ -19,7 +19,12 @@ def setup():
     Initial database setup; creates the `accounts` table
     '''
     cur = db.cursor()
-    cur.execute('CREATE TABLE IF NOT EXISTS accounts (name, balance, created_at)')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS accounts (
+            name text PRIMARY KEY, 
+            balance integer NOT NULL, 
+            created_at text NOT NULL);
+        ''')
     db.commit()
 
 

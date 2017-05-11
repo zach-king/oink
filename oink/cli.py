@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 import sys
 
-from . import accounts, db, router
+from . import accounts, db, router, transactions
 
 
 TITLE = r'''
@@ -31,7 +31,9 @@ def main():
     installation_path = get_installation_path()
     db.connect(installation_path)
 
+    # Setup the tables for the database
     accounts.setup()
+    transactions.setup()
 
     register_commands()
     show_welcome_message()
@@ -46,11 +48,15 @@ def register_commands():
     '''
     Registers all commands with the router class. See router.register() for details.
     '''
+    # Accounts commands
     router.register('la', 'List bank accounts', accounts.list_accounts)
     router.register('aa', 'Add bank account', accounts.add)
-    router.register('ea <name>', 'Edit bank account', accounts.edit)
     router.register('ra', 'Rename bank account', accounts.rename)
     router.register('da <name>', 'Delete bank account', accounts.delete)
+
+    # Transaction commands
+    router.register('rt', 'Record transaction', transactions.record_transaction)
+    router.register('lt', 'List transactions', transactions.list_transactions)
 
     router.register('q', 'Quit Oink', quit_oink)
 
