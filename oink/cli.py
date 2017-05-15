@@ -22,12 +22,10 @@ $$ |  $$ |$$ |$$ |  $$ |$$  _$$<
 
 
 def main():
-    """
+    '''
     Starting point. Ensures everything is setup and shows welcome message.
 
-    """
-    global conn
-
+    '''
     installation_path = get_installation_path()
     db.connect(installation_path)
 
@@ -73,7 +71,7 @@ def show_welcome_message():
     print('Type ? at any time to see what commands are available.')
 
 
-def quit_oink(signal=None, frame=None):
+def quit_oink():
     '''
     Print a quit message, disconnect from the databse, and exit.
     '''

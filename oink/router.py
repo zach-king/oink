@@ -13,11 +13,11 @@ print_padding = 0
 
 
 def register(command, help_text, handler):
-    """
-    Registers a command to a handler. 
+    '''
+    Registers a command to a handler.
 
     The command "keyword" is the trigger for the handler. All other values
-    are either required or optional arguments. 
+    are either required or optional arguments.
 
     Required arguments are written like <my_required_arg>.
 
@@ -26,7 +26,7 @@ def register(command, help_text, handler):
 
     Handlers will receive arguments in the order specified in the command.
 
-    """
+    '''
     global commands
     global print_padding
 
@@ -50,12 +50,12 @@ def register(command, help_text, handler):
 
 
 def route(command):
-    """
+    '''
     Attempts to match a command to a registered handler.
 
     Handles ensuring the required arguments, if any, are given.
 
-    """
+    '''
     bits = command.split(' ')
     keyword = bits[0] # First word (only single word commands supported)
     argstr = ' '.join(bits[1:])
@@ -114,12 +114,12 @@ def route(command):
 
 
 def show_help():
-    """
+    '''
     Render commands to console.
 
     Typically triggered by typeing "?".
 
-    """
+    '''
     for comm in commands:
         print('{0}{1}'.format(
             comm['command'].ljust(print_padding + 4),
@@ -127,10 +127,10 @@ def show_help():
 
 
 def wait():
-    """
+    '''
     Start router and wait for commands.
 
-    """
+    '''
     while True:
         print('') # Add some whitespace
         command = input('> ')

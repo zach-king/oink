@@ -1,7 +1,16 @@
+'''
+File: budget.py
+'''
+
+from __future__ import print_function
+
 from . import db
 
 
 def setup():
-    c = db.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS budget_categories (name)')
+    '''
+    Setup budgeting table(s).
+    '''
+    cur = db.cursor()
+    cur.execute('CREATE TABLE IF NOT EXISTS budget_categories (name)')
     db.commit()
