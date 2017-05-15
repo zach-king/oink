@@ -54,7 +54,8 @@ def register_commands():
 
     # Transaction commands
     router.register('rt', 'Record transaction', transactions.record_transaction)
-    router.register('lt', 'List transactions', transactions.list_transactions)
+    router.register('lat', 'List  all transactions', transactions.list_all_transactions)
+    router.register('lt <name>', 'List transactions for an account', transactions.list_transactions)
 
     router.register('q', 'Quit Oink', quit_oink)
 

@@ -104,14 +104,42 @@ def record_transaction():
         print('Failed to update balance.')
         return
 
-def list_transactions():
+def list_all_transactions():
     '''
-    Handler to list transactions for an account
+    Handler to list transactions for all accounts
     '''
     cur = db.cursor()
     cur.execute(
         'SELECT acct, description, credit, amount, recorded_on FROM \
         transactions ORDER BY recorded_on DESC')
+    rows = cur.fetchall()
+
+    # Place (+/-) in front of amount in response to credit/debit
+    new_rows = []
+    for row in rows:
+        str_amount = ''
+        if row[2] == 1: # Credit
+            str_amount = '-' + str(row[3])
+        else:
+            str_amount = '+' + str(row[3])
+        new_rows.append(row[:2] + (str_amount,) + row[4:])
+
+    print(tabulate(new_rows, headers=['Account', 'Description', 'Amount', 'Recorded On'], \
+        tablefmt='psql'))
+
+def list_transactions(acct):
+    '''
+    Handler to list transactions for a given account.
+    '''
+    cur = db.cursor()
+    cur.execute('SELECT * FROM accounts WHERE name = "{}"'.format(acct))
+    if cur.rowcount == 0:
+        print('No account was found by the name `{}`'.format(acct))
+        return
+
+    cur.execute(
+        'SELECT description, credit, amount, recorded_on FROM \
+        transactions WHERE acct = "{}" ORDER BY recorded_on DESC'.format(acct))
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
