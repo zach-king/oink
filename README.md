@@ -19,10 +19,11 @@ __Accounts__
 
 - `la` - List all bank accounts and their details.
 - `aa` - Add a new bank account.
-- `ea <name>` - Edit a bank account.
 - `da <name>` - Delete a bank account.
 
 __Budget__
+
+TODO
 
 - `lb [mm] [yyyy]` - List all budget categories for a month. Defaults to current month.
 - `ab` - Add new budget category.
@@ -32,9 +33,14 @@ __Budget__
 
 __Transactions__
 
+- `lat` - List all transactions for all accounts.
+- `lt <account>` - List all transactions for account.
+- `rt` - Record a transaction.
+
+TODO
+
 - `lt [num]` - List [num] recent transactions from all accounts. Defaults to 10.
 - `lt <account> [num]` - List [num] recent transactions for account. Defaults to 10.
-- `at` - Add a new transaction.
 - `ar` - Add transfer transaction between two accounts.
 - `et <id>` - Edit a transaction.
 - `dt <id>` - Delete a transaction.
@@ -46,7 +52,9 @@ TODO
 
 ## TODO
 
+- Write initial unit tests for accounts
+- Write initial unit tests for transactions
+- Write budget setup (creating budget table(s))
 - Add color to output
-- Add support for command shortcuts (ex: `la` for `list accounts`)
 - Add tab completion to command input
 - Sort output of commands in their own headers when printing help (should look similar to README)
