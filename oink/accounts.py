@@ -106,6 +106,16 @@ def rename():
         return
 
 
+def add_account(acct_no, acct_name, start_balance, created_on):
+    '''
+    Helper to add/insert a new account into the `accounts` table
+    '''
+    cur = db.cursor()
+    cur.execute('INSERT INTO accounts VALUES (?, ?, ?, ?)', \
+        (acct_no, acct_name, start_balance, created_on))
+    db.commit()
+
+
 def add():
     '''
     Handler to add/insert a new account into the `accounts` table
@@ -144,9 +154,7 @@ def add():
 
         created_at = datetime.now().strftime('%Y-%m-%d')
 
-        cur.execute('INSERT INTO accounts VALUES (?, ?, ?, ?)', \
-            (acct_no, name, starting_balance, created_at))
-        db.commit()
+        add_account(acct_no, name, starting_balance, created_at)
         print('Account created')
         return
 

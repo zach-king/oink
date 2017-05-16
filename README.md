@@ -52,7 +52,7 @@ TODO
 
 ## TODO
 
-- Write initial unit tests for accounts
+- ~~Write initial unit tests for accounts~~
 - Write initial unit tests for transactions
 - Write budget setup (creating budget table(s))
 - Add color to output
