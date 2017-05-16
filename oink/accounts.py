@@ -110,6 +110,16 @@ def add_account(acct_no, acct_name, start_balance, created_on):
     '''
     Helper to add/insert a new account into the `accounts` table
     '''
+    # Validation
+    if acct_no == '' or acct_no is None or acct_no < 0:
+        raise ValueError('Invalid account number')
+    if acct_name == '' or acct_name is None:
+        raise ValueError('Invalid account name')
+    if start_balance is None or start_balance < 0:
+        raise ValueError('Invalid starting balance')
+    if created_on is None or created_on == '':
+        raise ValueError('Invalid creation date')
+
     cur = db.cursor()
     cur.execute('INSERT INTO accounts VALUES (?, ?, ?, ?)', \
         (acct_no, acct_name, start_balance, created_on))

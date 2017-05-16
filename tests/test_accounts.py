@@ -8,20 +8,20 @@ Tests all account features.
 
 from __future__ import print_function
 
-import unittest, os
-import sqlite3
+import unittest
+import os
 
 from oink import accounts, db
 
 
 class TestAccounts(unittest.TestCase):
     '''Defines unit tests for adding and removing accounts.'''
-    
+
     def setUp(self):
         '''Setup testing databse.'''
         # Creates the testing database
         os.mkdir('testdb')
-        with open('testdb\oink.db', 'w') as fout:
+        with open(r'testdb\oink.db', 'w') as fout:
             pass
         db.connect('testdb')
         accounts.setup()
@@ -29,7 +29,7 @@ class TestAccounts(unittest.TestCase):
     def tearDown(self):
         '''Destroys the testing database.'''
         db.disconnect()
-        os.remove('testdb\oink.db')
+        os.remove(r'testdb\oink.db')
         os.rmdir('testdb')
 
     def test_add_new_account(self):
@@ -56,7 +56,42 @@ class TestAccounts(unittest.TestCase):
         cur.execute('SELECT COUNT(*) FROM accounts')
         self.assertEqual(cur.fetchone()[0], 0)
 
+    def test_add_null_account_number(self):
+        '''Tests NOT NULL constraint of database for account number'''
+        # Try to insert NULL as account number
+        with self.assertRaises(ValueError):
+            accounts.add_account(None, 'TestNullNumAccount', 0.0, '2017-1-1')
 
+        with self.assertRaises(ValueError):
+            accounts.add_account('', 'TestNullNumAccount', 0.0, '2017-1-1')
+
+    def test_add_null_account_name(self):
+        '''Tests NOT NULL constraint of database for account name'''
+        # Try to insert NULL as account name
+        with self.assertRaises(ValueError):
+            accounts.add_account(987, None, 0.0, '2017-1-1')
+
+        with self.assertRaises(ValueError):
+            accounts.add_account(789, '', 0.0, '2017-1-1')
+
+    def test_add_null_start_balance(self):
+        '''Tests NOT NULL constraint of databse for account starting balance'''
+        # Try to insert NULL as account starting balance
+        with self.assertRaises(ValueError):
+            accounts.add_account(111, 'TestNullStartBalanceAccount', None, '2017-1-1')
+
+    def test_add_negative_start_balance(self):
+        '''Tests inserting a negative starting balace for a new account'''
+        with self.assertRaises(ValueError):
+            accounts.add_account(222, 'TestNegativeStartingBalance', -100.0, '2017-1-1')
+
+    def test_add_null_created_date(self):
+        '''Tests NOT NULL constraint for account created_on'''
+        with self.assertRaises(ValueError):
+            accounts.add_account(333, 'TestNullCreatedOn', 0.0, '')
+
+        with self.assertRaises(ValueError):
+            accounts.add_account(333, 'TestNullCreatedOn', 0.0, None)
 
 
 if __name__ == '__main__':
