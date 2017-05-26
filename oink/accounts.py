@@ -21,7 +21,7 @@ def setup():
     cur = db.cursor()
     cur.execute('''
         CREATE TABLE IF NOT EXISTS accounts (
-            acct_no integer PRIMARY KEY,
+            acct_no integer NOT NULL PRIMARY KEY,
             name text NOT NULL UNIQUE, 
             balance integer NOT NULL, 
             created_at text NOT NULL);
