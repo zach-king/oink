@@ -31,8 +31,29 @@ def create_budget():
     '''Handler for creating a new budget'''
     # Get the budget category inputs from user
     budget_name = input('Budget category name: ')
+
+    # Data validation
+    if budget_name == '' or budget_name is None:
+        print('Invalid budget category name `{}`.'.format(budget_name))
+        return False
+
     budget_amount = input('Budget amount: ')
+    try:
+        budget_amount = float(budget_amount)
+    except ValueError:
+        print('Invalid budget amount specified. Amount must be a numeric value.')
+        return False
+
+    if budget_amount < 0 or budget_amount is None:
+        print('Invalid budget amount specified. Amount must not be less than zero.')
+        return False
+
     acct_name = input('Account name: ')
+    if acct_name == '' or acct_name is None:
+        print('Invalid account name `{}` for budget assignment.'.format(acct_name))
+        return False
+
+    # Create the budget
     _create_budget(budget_name, budget_amount, acct_name)
 
 
