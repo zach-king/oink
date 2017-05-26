@@ -25,9 +25,14 @@ def setup():
             description text NOT NULL,
             credit integer NOT NULL,
             amount integer NOT NULL,
+            budget_category text NOT NULL,
             recorded_on text NOT NULL,
             FOREIGN KEY (acct)
                 REFERENCES accounts (name)
+                ON UPDATE CASCADE
+                ON DELETE CASCADE,
+            FOREIGN KEY (budget_category)
+                REFERENCES budget_categories (category_name)
                 ON UPDATE CASCADE
                 ON DELETE CASCADE
         );
@@ -77,10 +82,19 @@ def record_transaction():
             return
         amount = float(re.sub(r'[^0-9\.]', '', amount))
 
+        category = input('Budget category: ')
+        if len(category) <= 0:
+            print('Record transaction cancelled.')
+            return
+        cur.execute('SELECT * FROM budget_categories WHERE category_name = "{}"'.format(category))
+        if cur.rowcount == 0:
+            print('Sorry, no budget category was found under the name `{}`'.format(category))
+            continue
+
         recorded_on = datetime.now().strftime('%Y-%m-%d')
 
-        cur.execute('INSERT INTO transactions(acct, description, credit, amount, recorded_on) \
-            VALUES (?, ?, ?, ?, ?)', (name, description, credit, amount, recorded_on))
+        cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
+            VALUES (?, ?, ?, ?, ?, ?)', (name, description, credit, amount, category, recorded_on))
 
         if cur.rowcount == 0:
             print('Failed to record transaction.')
@@ -111,8 +125,7 @@ def list_all_transactions():
     '''
     cur = db.cursor()
     cur.execute(
-        'SELECT acct, description, credit, amount, recorded_on FROM \
-        transactions ORDER BY recorded_on DESC')
+        'SELECT * FROM transactions ORDER BY recorded_on DESC')
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
@@ -125,7 +138,7 @@ def list_all_transactions():
             str_amount = '+' + str(row[3])
         new_rows.append(row[:2] + (str_amount,) + row[4:])
 
-    print(tabulate(new_rows, headers=['Account', 'Description', 'Amount', 'Recorded On'], \
+    print(tabulate(new_rows, headers=['Account', 'Description', 'Amount', 'Category', 'Recorded On'], \
         tablefmt='psql'))
 
 def list_transactions(acct):
@@ -139,8 +152,7 @@ def list_transactions(acct):
         return
 
     cur.execute(
-        'SELECT description, credit, amount, recorded_on FROM \
-        transactions WHERE acct = "{}" ORDER BY recorded_on DESC'.format(acct))
+        'SELECT * FROM transactions WHERE acct = "{}" ORDER BY recorded_on DESC'.format(acct))
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
@@ -153,5 +165,5 @@ def list_transactions(acct):
             str_amount = '+' + str(row[3])
         new_rows.append(row[:2] + (str_amount,) + row[4:])
 
-    print(tabulate(new_rows, headers=['Account', 'Description', 'Amount', 'Recorded On'], \
+    print(tabulate(new_rows, headers=['Account', 'Description', 'Amount', 'Category', 'Recorded On'], \
         tablefmt='psql'))
