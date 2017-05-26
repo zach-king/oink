@@ -125,20 +125,20 @@ def list_all_transactions():
     '''
     cur = db.cursor()
     cur.execute(
-        'SELECT acct, description, credit, amount, budget_category, recorded_on FROM transactions ORDER BY recorded_on DESC')
+        'SELECT trans_id, acct, description, credit, amount, budget_category, recorded_on FROM transactions ORDER BY recorded_on DESC')
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
     new_rows = []
     for row in rows:
         str_amount = ''
-        if row[2] == 1: # Credit
-            str_amount = '-' + str(row[3])
+        if row[3] == 1: # Credit
+            str_amount = '-' + str(row[4])
         else:
-            str_amount = '+' + str(row[3])
-        new_rows.append(row[:2] + (str_amount,) + row[4:])
+            str_amount = '+' + str(row[4])
+        new_rows.append(row[:3] + (str_amount,) + row[5:])
 
-    print(tabulate(new_rows, headers=['Account', 'Description', 'Amount', 'Category', 'Recorded On'], \
+    print(tabulate(new_rows, headers=['Transaction #', 'Account', 'Description', 'Amount', 'Category', 'Recorded On'], \
         tablefmt='psql'))
 
 def list_transactions(acct):
@@ -152,18 +152,19 @@ def list_transactions(acct):
         return
 
     cur.execute(
-        'SELECT * FROM transactions WHERE acct = "{}" ORDER BY recorded_on DESC'.format(acct))
+        'SELECT trans_id, acct, description, credit, amount, budget_category, recorded_on \
+        FROM transactions WHERE acct = "{}" ORDER BY recorded_on DESC'.format(acct))
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
     new_rows = []
     for row in rows:
         str_amount = ''
-        if row[2] == 1: # Credit
-            str_amount = '-' + str(row[3])
+        if row[3] == 1: # Credit
+            str_amount = '-' + str(row[4])
         else:
-            str_amount = '+' + str(row[3])
-        new_rows.append(row[:2] + (str_amount,) + row[4:])
+            str_amount = '+' + str(row[4])
+        new_rows.append(row[:3] + (str_amount,) + row[5:])
 
-    print(tabulate(new_rows, headers=['Account', 'Description', 'Amount', 'Category', 'Recorded On'], \
+    print(tabulate(new_rows, headers=['Transaction #', 'Account', 'Description', 'Amount', 'Category', 'Recorded On'], \
         tablefmt='psql'))
