@@ -16,7 +16,7 @@ def setup():
         category_name text NOT NULL PRIMARY KEY,
         budget_amount integer NOT NULL,
         budget_acct text NOT NULL,
-        FOREIGN_KEY (budget_acct) 
+        FOREIGN_KEY budget_acct
             REFERENCES accounts (name)
             ON UPDATE CASCADE
             ON DELETE CASCADE
@@ -73,7 +73,7 @@ def _create_budget(name, amount, acct):
     # Check if the budget name already exists
     cur = db.cursor()
     budget_exists = cur.execute(
-        'SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}".'.format(name)
+        'SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(name)
     ).fetchone()[0]
 
     if budget_exists:
@@ -82,7 +82,7 @@ def _create_budget(name, amount, acct):
 
     # Check if the account tied to this budget exists
     acct_exists = cur.execute(
-        'SELECT COUNT(*) FROM accounts WHERE name = "{}".'.format(acct)
+        'SELECT COUNT(*) FROM accounts WHERE name = "{}"'.format(acct)
     ).fetchone()[0]
 
     if not acct_exists:
