@@ -23,10 +23,12 @@ __Accounts__
 
 __Budget__
 
+- `ab` - Add new budget category.
+- `lab` - List all budget categories.
+
 TODO
 
 - `lb [mm] [yyyy]` - List all budget categories for a month. Defaults to current month.
-- `ab` - Add new budget category.
 - `sb <category> <amount>` - Set budget category amount for the current month.
 - `eb <category>` - Change budget category name.
 - `db <category>` - Delete budget category.
