@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 import sys
 
-from . import accounts, db, router, transactions
+from . import accounts, db, router, transactions, budget
 
 
 TITLE = r'''
@@ -32,6 +32,7 @@ def main():
     # Setup the tables for the database
     accounts.setup()
     transactions.setup()
+    budget.setup()
 
     register_commands()
     show_welcome_message()
@@ -56,6 +57,9 @@ def register_commands():
     router.register('rt', 'Record transaction', transactions.record_transaction)
     router.register('lat', 'List  all transactions', transactions.list_all_transactions)
     router.register('lt <name>', 'List transactions for an account', transactions.list_transactions)
+
+    # Budget commands
+    router.register('ab', 'Add budget category', budget.create_budget)
 
     router.register('q', 'Quit Oink', quit_oink)
 
