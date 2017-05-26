@@ -4,6 +4,8 @@ File: budget.py
 
 from __future__ import print_function
 
+from tabulate import tabulate
+
 from . import db
 
 
@@ -108,3 +110,11 @@ def _create_budget(name, amount, acct):
     return False
 
 
+def list_all_budgets():
+    '''Handler for listing all budget data'''
+    cur = db.cursor()
+    cur.execute('SELECT category_name, budget_amount, budget_acct FROM budget_categories ORDER BY budget_acct DESC')
+    rows = cur.fetchall()
+
+    print(tabulate(rows, headers=['Category', 'Budget', 'Account'], \
+        tablefmt='psql'))
