@@ -60,6 +60,7 @@ def register_commands():
 
     # Budget commands
     router.register('ab', 'Add budget category', budget.create_budget)
+    router.register('lab', 'List all budgets', budget.list_all_budgets)
 
     router.register('q', 'Quit Oink', quit_oink)
 
