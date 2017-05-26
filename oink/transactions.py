@@ -125,7 +125,7 @@ def list_all_transactions():
     '''
     cur = db.cursor()
     cur.execute(
-        'SELECT * FROM transactions ORDER BY recorded_on DESC')
+        'SELECT acct, description, credit, amount, budget_category, recorded_on FROM transactions ORDER BY recorded_on DESC')
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
