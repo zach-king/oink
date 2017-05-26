@@ -54,7 +54,7 @@ TODO
 
 - ~~Write initial unit tests for accounts~~
 - Write initial unit tests for transactions
-- Write budget setup (creating budget table(s))
+- ~~Write budget setup (creating budget table(s))~~
 - Add color to output
 - Add tab completion to command input
 - Sort output of commands in their own headers when printing help (should look similar to README)
