@@ -28,6 +28,7 @@ def setup():
             recorded_on text NOT NULL,
             FOREIGN KEY (acct)
                 REFERENCES accounts (name)
+                ON UPDATE CASCADE
                 ON DELETE CASCADE
         );
         ''')
