@@ -24,10 +24,11 @@ __Accounts__
 __Budget__
 
 - `ab` - Add new budget category.
+- `lb [mm] [yyyy]` - List all budget categories for a month. Defaults to current month.
 
 TODO
 
-- `lb [mm] [yyyy]` - List all budget categories for a month. Defaults to current month.
+
 - `sb <category> <amount>` - Set budget category amount for the current month.
 - `eb <category>` - Change budget category name.
 - `db <category>` - Delete budget category.
@@ -35,13 +36,11 @@ TODO
 __Transactions__
 
 - `lat` - List all transactions for all accounts.
-- `lt <account>` - List all transactions for account.
+- `lt <account> [num]` - List [num] recent transactions for account. Defaults to 10.
 - `rt` - Record a transaction.
 
 TODO
 
-- `lt [num]` - List [num] recent transactions from all accounts. Defaults to 10.
-- `lt <account> [num]` - List [num] recent transactions for account. Defaults to 10.
 - `ar` - Add transfer transaction between two accounts.
 - `et <id>` - Edit a transaction.
 - `dt <id>` - Delete a transaction.
