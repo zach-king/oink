@@ -70,12 +70,12 @@ def rename():
 
         # Try finding it by name
         if not found:
-            cur.execute('SELECT COUNT(*) FROM accounts WHERE name = "' + oldname + '"')
-            result = cur.fetchone()
-            count = result[0]
+            count = cur.execute('SELECT COUNT(*) FROM accounts WHERE name = "{}"'.format(oldname))
+            cur.execute('SELECT acct_no, name FROM accounts WHERE name = "' + oldname + '"')
+            result = cur.fetchall()
 
             # Check if found by name
-            if count == 1:
+            if count != 0:
                 found = True
                 acct_no = result[0][0]
 

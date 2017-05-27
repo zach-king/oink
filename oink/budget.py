@@ -3,6 +3,7 @@ File: budget.py
 '''
 
 from __future__ import print_function
+import datetime
 
 from tabulate import tabulate
 
@@ -103,6 +104,7 @@ def _create_budget(name, amount, acct):
     ).fetchone()[0]
 
     if success:
+        db.commit()
         print('New budget category `{}` created successfully.'.format(name))
         return True
 
@@ -113,8 +115,56 @@ def _create_budget(name, amount, acct):
 def list_all_budgets():
     '''Handler for listing all budget data'''
     cur = db.cursor()
-    cur.execute('SELECT category_name, budget_amount, budget_acct FROM budget_categories ORDER BY budget_acct DESC')
+    cur.execute('SELECT category_name, budget_amount, budget_acct \
+        FROM budget_categories ORDER BY budget_acct DESC')
     rows = cur.fetchall()
 
     print(tabulate(rows, headers=['Category', 'Budget', 'Account'], \
         tablefmt='psql'))
+
+
+def list_budget(month=None, year=None):
+    '''Handler for listing budget data for all account for a month'''
+    # Default month and year to current
+    if month is None:
+        month = str(datetime.datetime.today().month)
+    if year is None:
+        year = str(datetime.datetime.today().year)
+
+    # Data validation
+    if not str(month).isdecimal() or (int(month) < 1 or int(month) > 12):
+        print('Invalid value for <month>. Month should be a number 1-12.')
+        return
+    elif int(month) > datetime.datetime.today().month:
+        print('Cannot list budget data for the future :O')
+        return
+
+    if not str(year).isdecimal() or \
+        (int(year) > datetime.datetime.today().year) or \
+        len(str(year)) != 4:
+        print('Invalid value for year. Year must be a four-digit integer, ' + \
+        'and cannot be in the future!')
+        return
+
+    if len(str(month)) == 1:
+        month = '0' + month
+
+    # Loop through budgets, and for the account that is attached to it
+    # loop through its transactions, matching the budget category;
+    # then evaluate the budget result (overbudget or underbudget)
+    budget_cur = db.cursor()
+    trans_cur = db.cursor()
+    rows = []
+    for budget in budget_cur.execute('SELECT category_name, budget_amount, budget_acct \
+        FROM budget_categories'):
+        result = budget[1] # Budget amount
+        transaction_query = 'SELECT credit, amount FROM transactions WHERE acct = "{}" AND budget_category = "{}" AND recorded_on LIKE "{}"'
+        transaction_query = transaction_query.format(budget[2],  budget[0], str(year) + '-' + str(month) + '%')
+        for transaction in trans_cur.execute(transaction_query):
+            if transaction[0] == 1:
+                result -= transaction[1]
+        rows.append([budget[0], budget[2], budget[1], result])
+
+    print(tabulate(rows, headers=['Category', 'Account', 'Budget', 'Balance'], \
+        tablefmt='psql'))
+

@@ -25,7 +25,7 @@ def setup():
             description text NOT NULL,
             credit integer NOT NULL,
             amount integer NOT NULL,
-            budget_category text NOT NULL,
+            budget_category text,
             recorded_on text NOT NULL,
             FOREIGN KEY (acct)
                 REFERENCES accounts (name)
@@ -86,8 +86,8 @@ def record_transaction():
         if len(category) <= 0:
             print('Record transaction cancelled.')
             return
-        cur.execute('SELECT * FROM budget_categories WHERE category_name = "{}"'.format(category))
-        if cur.rowcount == 0:
+        cur.execute('SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(category))
+        if cur.fetchone()[0] == 0:
             print('Sorry, no budget category was found under the name `{}`'.format(category))
             continue
 
