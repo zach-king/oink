@@ -83,18 +83,22 @@ def record_transaction():
         amount = float(re.sub(r'[^0-9\.]', '', amount))
 
         category = input('Budget category: ')
-        if len(category) <= 0:
-            print('Record transaction cancelled.')
-            return
-        cur.execute('SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(category))
-        if cur.fetchone()[0] == 0:
-            print('Sorry, no budget category was found under the name `{}`'.format(category))
-            continue
+        if category.lower() in ('', 'none', 'null', 'n/a'):
+            category = 'NULL'
+        else:
+            cur.execute('SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(category))
+            if cur.fetchone()[0] == 0:
+                print('Sorry, no budget category was found under the name `{}`'.format(category))
+                continue
 
         recorded_on = datetime.now().strftime('%Y-%m-%d')
 
-        cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
-            VALUES (?, ?, ?, ?, ?, ?)', (name, description, credit, amount, category, recorded_on))
+        if category != 'NULL':
+            cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
+                VALUES ("{}", "{}", {}, {}, "{}", "{}")'.format(name, description, credit, amount, category, recorded_on))
+        else:
+            cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
+                VALUES ("{}", "{}", {}, {}, NULL, "{}")'.format(name, description, credit, amount, recorded_on))
 
         if cur.rowcount == 0:
             print('Failed to record transaction.')

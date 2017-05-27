@@ -16,7 +16,7 @@ def setup():
     '''
     budget_categories_sql = '''
     CREATE TABLE IF NOT EXISTS budget_categories (
-        category_name text NOT NULL PRIMARY KEY,
+        category_name text PRIMARY KEY,
         budget_amount integer NOT NULL,
         budget_acct text NOT NULL,
         FOREIGN_KEY budget_acct
