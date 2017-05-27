@@ -32,11 +32,13 @@ def register(command, help_text, handler):
 
     bits = command.split()
     keyword = ' '.join([x for x in bits if x[0] not in ['<', '[']])
-    args = [x for x in bits if x[0] == '<']
+    required_args = [x for x in bits if x[0] == '<']
+    optional_args = [x for x in bits if x[0] == '[']
 
     commands.append({
         'keyword': keyword,
-        'args': args,
+        'required_args': required_args,
+        'optional_args': optional_args,
         'command': command,
         'help_text': help_text,
         'handler': handler
@@ -94,15 +96,18 @@ def route(command):
         if comm['keyword'] == keyword:
             error = None
             given_args_length = len(args)
-            command_args_length = len(comm['args'])
+            command_args_length = len(comm['required_args'])
+            max_args_length = len(comm['optional_args']) + command_args_length
 
             if given_args_length < command_args_length:
                 arg_index = (command_args_length - given_args_length) - 1
-                error = '{} is required'.format(comm['args'][arg_index])
-            elif given_args_length > command_args_length:
+                error = '{} is required'.format(comm['required_args'][arg_index])
+            elif given_args_length > max_args_length:
                 error = '{} argument(s) were expected, but {} were given.'.format(
                     command_args_length, given_args_length)
             else:
+                # Must be valid arguments list
+                # Call the handler
                 error = comm['handler'](*args)
 
             if error:

@@ -56,7 +56,7 @@ def register_commands():
     # Transaction commands
     router.register('rt', 'Record transaction', transactions.record_transaction)
     router.register('lat', 'List  all transactions', transactions.list_all_transactions)
-    router.register('lt <name>', 'List transactions for an account', transactions.list_transactions)
+    router.register('lt <name> [num]', 'List transactions for an account', transactions.list_transactions)
 
     # Budget commands
     router.register('ab', 'Add budget category', budget.create_budget)
