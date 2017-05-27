@@ -125,7 +125,8 @@ def list_all_transactions():
     '''
     cur = db.cursor()
     cur.execute(
-        'SELECT trans_id, acct, description, credit, amount, budget_category, recorded_on FROM transactions ORDER BY recorded_on DESC')
+        'SELECT trans_id, acct, description, credit, amount, \
+        budget_category, recorded_on FROM transactions ORDER BY recorded_on DESC')
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
@@ -138,13 +139,18 @@ def list_all_transactions():
             str_amount = '+' + str(row[4])
         new_rows.append(row[:3] + (str_amount,) + row[5:])
 
-    print(tabulate(new_rows, headers=['Transaction #', 'Account', 'Description', 'Amount', 'Category', 'Recorded On'], \
+    print(tabulate(new_rows, headers=['Transaction #', 'Account', \
+    'Description', 'Amount', 'Category', 'Recorded On'], \
         tablefmt='psql'))
 
-def list_transactions(acct):
+def list_transactions(acct, num=10):
     '''
     Handler to list transactions for a given account.
     '''
+    limit_inject = ''
+    if num is not None:
+        limit_inject = 'LIMIT ' + str(num)
+
     cur = db.cursor()
     cur.execute('SELECT * FROM accounts WHERE name = "{}"'.format(acct))
     if cur.rowcount == 0:
@@ -152,8 +158,9 @@ def list_transactions(acct):
         return
 
     cur.execute(
-        'SELECT trans_id, acct, description, credit, amount, budget_category, recorded_on \
-        FROM transactions WHERE acct = "{}" ORDER BY recorded_on DESC'.format(acct))
+        'SELECT trans_id, acct, description, credit, amount, budget_category, \
+        recorded_on FROM transactions WHERE acct = "{}" ORDER BY recorded_on \
+        DESC {}'.format(acct, limit_inject))
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
@@ -166,5 +173,7 @@ def list_transactions(acct):
             str_amount = '+' + str(row[4])
         new_rows.append(row[:3] + (str_amount,) + row[5:])
 
-    print(tabulate(new_rows, headers=['Transaction #', 'Account', 'Description', 'Amount', 'Category', 'Recorded On'], \
+    print(tabulate(new_rows, headers=['Transaction #', 'Account', \
+        'Description', 'Amount', 'Category', 'Recorded On'], \
         tablefmt='psql'))
+
