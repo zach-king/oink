@@ -24,7 +24,6 @@ __Accounts__
 __Budget__
 
 - `ab` - Add new budget category.
-- `lab` - List all budget categories.
 
 TODO
 
