@@ -28,7 +28,6 @@ __Budget__
 
 TODO
 
-
 - `sb <category> <amount>` - Set budget category amount for the current month.
 - `eb <category>` - Change budget category name.
 - `db <category>` - Delete budget category.
@@ -49,12 +48,12 @@ __Reports__
 
 TODO
 
+- `rep <account> <format> <file>` - Generate a report in the specified format, and save it to a file. Should support formats CSV and PDF.
+
 
 ## TODO
 
-- ~~Write initial unit tests for accounts~~
-- Write initial unit tests for transactions
-- ~~Write budget setup (creating budget table(s))~~
+- Write unit tests for transactions
 - Add color to output
 - Add tab completion to command input
 - Sort output of commands in their own headers when printing help (should look similar to README)
