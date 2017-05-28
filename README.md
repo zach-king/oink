@@ -34,8 +34,7 @@ TODO
 
 __Transactions__
 
-- `lat` - List all transactions for all accounts.
-- `lt <account> [num]` - List [num] recent transactions for account. Defaults to 10.
+- `lt [account] [num]` - List [num] recent transactions for account. Defaults to 10.
 - `rt` - Record a transaction.
 
 TODO

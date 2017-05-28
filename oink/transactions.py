@@ -123,14 +123,19 @@ def record_transaction():
         print('Failed to update balance.')
         return
 
-def list_all_transactions():
+def list_all_transactions(num=10):
     '''
     Handler to list transactions for all accounts
     '''
+    limit_inject = ''
+    if num is not None:
+        limit_inject = 'LIMIT ' + str(num)
+
     cur = db.cursor()
     cur.execute(
         'SELECT trans_id, acct, description, credit, amount, \
-        budget_category, recorded_on FROM transactions ORDER BY recorded_on DESC')
+        budget_category, recorded_on FROM transactions ORDER BY recorded_on DESC \
+        {}'.format(limit_inject))
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
@@ -147,13 +152,18 @@ def list_all_transactions():
     'Description', 'Amount', 'Category', 'Recorded On'], \
         tablefmt='psql'))
 
-def list_transactions(acct, num=10):
+def list_transactions(acct=None, num=10):
     '''
     Handler to list transactions for a given account.
     '''
     limit_inject = ''
     if num is not None:
         limit_inject = 'LIMIT ' + str(num)
+
+    # List all accounts?
+    if acct is None:
+        list_all_transactions(num)
+        return
 
     cur = db.cursor()
     cur.execute('SELECT * FROM accounts WHERE name = "{}"'.format(acct))
