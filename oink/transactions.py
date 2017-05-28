@@ -39,6 +39,34 @@ def setup():
         ''')
     db.commit()
 
+def _add_transaction(acct, desc, credit, amount, category):
+    '''Helper function for adding a transaction'''
+    cur = db.cursor()
+    recorded_on = datetime.now().strftime('%Y-%m-%d')
+    if category not in ('', 'null', 'NULL', None):
+        cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
+            VALUES ("{}", "{}", {}, {}, "{}", "{}")'.format(acct, desc, credit, amount, category, recorded_on))
+    else:
+        cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
+            VALUES ("{}", "{}", {}, {}, NULL, "{}")'.format(acct, desc, credit, amount, recorded_on))
+
+    if cur.rowcount == 0:
+        print('Failed to record transaction.')
+        return
+
+    # Now withdraw or deposit from the account as recorded
+    prev_balance = accounts.get_balance(acct)
+    new_balance = 0
+    if credit == 1:
+        new_balance = prev_balance - amount
+    else:
+        new_balance = prev_balance + amount
+
+    # Set the new balance
+    success = accounts.set_balance(acct, new_balance)
+
+    return success
+
 def record_transaction():
     '''
     Handler to record a new transaction in a given account
@@ -91,30 +119,8 @@ def record_transaction():
                 print('Sorry, no budget category was found under the name `{}`'.format(category))
                 continue
 
-        recorded_on = datetime.now().strftime('%Y-%m-%d')
-
-        if category != 'NULL':
-            cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
-                VALUES ("{}", "{}", {}, {}, "{}", "{}")'.format(name, description, credit, amount, category, recorded_on))
-        else:
-            cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
-                VALUES ("{}", "{}", {}, {}, NULL, "{}")'.format(name, description, credit, amount, recorded_on))
-
-        if cur.rowcount == 0:
-            print('Failed to record transaction.')
-            return
-
-        # Now withdraw or deposit from the account as recorded
-        prev_balance = accounts.get_balance(name)
-        new_balance = 0
-        if credit == 1:
-            new_balance = prev_balance - amount
-        else:
-            new_balance = prev_balance + amount
-
-        # Set the new balance
-        success = accounts.set_balance(name, new_balance)
-
+        # Call the helper function
+        success = _add_transaction(name, description, credit, amount, category)
         if success:
             db.commit()
             print('Transaction recorded')
@@ -128,7 +134,7 @@ def list_all_transactions(num=10):
     Handler to list transactions for all accounts
     '''
     limit_inject = ''
-    if num is not None:
+    if num not in (None, '*'):
         limit_inject = 'LIMIT ' + str(num)
 
     cur = db.cursor()
@@ -156,14 +162,13 @@ def list_transactions(acct=None, num=10):
     '''
     Handler to list transactions for a given account.
     '''
-    limit_inject = ''
-    if num is not None:
-        limit_inject = 'LIMIT ' + str(num)
-
-    # List all accounts?
-    if acct is None:
+    if acct in (None, '*'):
         list_all_transactions(num)
         return
+
+    limit_inject = ''
+    if num not in (None, '*'):
+        limit_inject = 'LIMIT ' + str(num)
 
     cur = db.cursor()
     cur.execute('SELECT * FROM accounts WHERE name = "{}"'.format(acct))
@@ -191,3 +196,49 @@ def list_transactions(acct=None, num=10):
         'Description', 'Amount', 'Category', 'Recorded On'], \
         tablefmt='psql'))
 
+
+def add_transfer(source_acct=None, dest_acct=None, amount=None):
+    '''Handler for adding a transfer transaction between two accounts'''
+    # Check for optargs and validate data
+    cur = db.cursor()
+    accts = [acct[0] for acct in cur.execute('SELECT name FROM accounts')]
+    if source_acct is None:
+        source_acct = input('Source account name: ')
+    if source_acct == '':
+        print('Transfer transaction cancelled.')
+        return
+    if source_acct not in accts:
+        print('The source account `{}` does not exist.'.format(source_acct))
+        return
+
+    if dest_acct is None:
+        dest_acct = input('Destination account name: ')
+    if dest_acct == '':
+        print('Transfer transaction cancelled.')
+        return
+    if dest_acct not in accts:
+        print('The destination account `{}` does not exist.'.format(dest_acct))
+        return
+
+    if amount is None:
+        amount = input('Amount to transfer: ')
+    try:
+        amount = float(amount)
+    except ValueError:
+        print('The amount must be a number!')
+        return
+    else:
+        if amount <= 0:
+            print('The amount must be greater than zero!')
+            return
+
+    # Make the two transactions on the accounts
+    success = _add_transaction(source_acct, 'Transfer to `{}`'.format(dest_acct), 1, amount, None)
+    success = success and _add_transaction(dest_acct, 'Transfer from `{}`'.format(source_acct), 0, amount, None)
+
+    if success:
+        print('Transfer from `{}` to `{}` recorded.'.format(source_acct, dest_acct))
+        db.commit()
+        return
+
+    print('Failed to record transfer transaction from `{}` to `{}`.'.format(source_acct, dest_acct))
