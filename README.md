@@ -53,7 +53,9 @@ TODO
 
 ## TODO
 
+- Write unit tests for budget
 - Write unit tests for transactions
 - Add color to output
 - Add tab completion to command input
 - Sort output of commands in their own headers when printing help (should look similar to README)
+- Refactor commands with the optional argument support
