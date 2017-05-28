@@ -54,7 +54,7 @@ def register_commands():
     router.register('da <name>', 'Delete bank account', accounts.delete)
 
     # Transaction commands
-    router.register('rt', 'Record transaction', transactions.record_transaction)
+    router.register('at', 'Record a new transaction', transactions.record_transaction)
     router.register('lt [account] [num]', 'List transactions for an account; defaults to all accounts', transactions.list_transactions)
 
     # Budget commands
