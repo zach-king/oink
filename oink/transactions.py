@@ -9,7 +9,7 @@ from datetime import datetime
 # 3rd-Party module for tabular console output
 from tabulate import tabulate
 
-from . import db, accounts
+from . import db, accounts, budget
 
 
 def setup():
@@ -242,3 +242,43 @@ def add_transfer(source_acct=None, dest_acct=None, amount=None):
         return
 
     print('Failed to record transfer transaction from `{}` to `{}`.'.format(source_acct, dest_acct))
+
+
+def delete_transaction(trans_id):
+    '''Handler for the delete a transaction command'''
+    # Validate the transaction id
+    cur = db.cursor()
+    if trans_id == '' or trans_id is None:
+        print('Delete transaction cancelled.')
+        return
+
+    try:
+        trans_id = int(trans_id)
+    except ValueError:
+        print('Transaction ID must be an integer!')
+        return
+
+    rows = cur.execute('SELECT COUNT(*) FROM transactions WHERE trans_id = {}'.format(trans_id)).fetchone()
+    if rows[0] != 1:
+        print('No transaction was found with ID `{}`'.format(trans_id))
+        return
+
+    # Counter the transaction effect
+    transaction = cur.execute('SELECT acct, credit, amount, budget_category FROM transactions \
+        WHERE trans_id = {}'.format(trans_id)).fetchone()
+    account = transaction[0]
+    amount = transaction[2]
+    amount *= -1 if transaction[1] == 0 else 1
+    category = transaction[3]
+
+    # Update the balance of the account
+    accounts.set_balance(account, accounts.get_balance(account) + amount)
+
+    # Valid and exists so delete
+    cur.execute('DELETE FROM transactions WHERE trans_id = {}'.format(trans_id))
+    if cur.execute('SELECT COUNT(*) FROM transactions WHERE trans_id = {}'.format(trans_id)).fetchone()[0] != 0:
+        print('Failed to delete transaction.')
+        return
+
+    print('Transaction deleted.')
+    db.commit()

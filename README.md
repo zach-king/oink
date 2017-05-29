@@ -37,11 +37,11 @@ __Transactions__
 - `lt [account] [num]` - List [num] recent transactions for account. Defaults to 10.
 - `at` - Record a new transaction.
 - `ar [source] [dest] [amount]` - Add transfer transaction between two accounts.
+- `dt <id>` - Delete a transaction.
 
 TODO
 
 - `et <id>` - Edit a transaction.
-- `dt <id>` - Delete a transaction.
 
 __Reports__
 
@@ -58,3 +58,4 @@ TODO
 - Add tab completion to command input
 - Sort output of commands in their own headers when printing help (should look similar to README)
 - Refactor commands with the optional argument support
+- Should `dt` on a transfer automatically delete *both* transactions?
