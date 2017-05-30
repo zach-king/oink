@@ -55,16 +55,20 @@ def register_commands():
 
     # Transaction commands
     router.register('at', 'Record a new transaction', transactions.record_transaction)
-    router.register('lt [account] [num]', 'List transactions for an account; defaults to all accounts and 10 transactions. Use * to specify all.', transactions.list_transactions)
-    router.register('ar [source] [dest] [amount]', 'Record a transfer transaction between two accounts', transactions.add_transfer)
+    router.register('lt [account] [num]', 'List transactions for an account; ' + \
+        'defaults to all accounts and 10 transactions. ' + \
+        'Use * to specify all.', transactions.list_transactions)
+    router.register('ar [source] [dest] [amount]', 'Record a transfer ' + \
+        'transaction between two accounts', transactions.add_transfer)
     router.register('et <id>', 'Edit a transaction', transactions.edit_transaction)
     router.register('dt <id>', 'Delete a transaction', transactions.delete_transaction)
 
     # Budget commands
     router.register('ab', 'Add budget category', budget.create_budget)
-    router.register('lb [mm] [yyyy]', 'List all budget categories for a month. \
-        Defaults to current month', budget.list_budget)
-    router.register('sb <category> <amount>','Set budget category amount', budget.set_budget)
+    router.register('lb [mm] [yyyy]', 'List all budget categories for a month. ' + \
+        'Defaults to current month', budget.list_budget)
+    router.register('sb <category> <amount>', 'Set budget ' + \
+        'category amount', budget.set_budget)
 
     router.register('q', 'Quit Oink', quit_oink)
 
