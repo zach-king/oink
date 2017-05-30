@@ -64,6 +64,7 @@ def register_commands():
     router.register('ab', 'Add budget category', budget.create_budget)
     router.register('lb [mm] [yyyy]', 'List all budget categories for a month. \
         Defaults to current month', budget.list_budget)
+    router.register('sb <category> <amount>','Set budget category amount', budget.set_budget)
 
     router.register('q', 'Quit Oink', quit_oink)
 

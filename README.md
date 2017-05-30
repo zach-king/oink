@@ -25,10 +25,10 @@ __Budget__
 
 - `ab` - Add new budget category.
 - `lb [mm] [yyyy]` - List all budget categories for a month. Defaults to current month.
+- `sb <category> <amount>` - Set budget category amount for the current month.
 
 TODO
 
-- `sb <category> <amount>` - Set budget category amount for the current month.
 - `eb <category>` - Change budget category name.
 - `db <category>` - Delete budget category.
 
@@ -56,3 +56,4 @@ TODO
 - Sort output of commands in their own headers when printing help (should look similar to README)
 - Refactor commands with the optional argument support
 - Should `dt` on a transfer automatically delete *both* transactions?
+- Need a way to show previous budgets (history of budgets)

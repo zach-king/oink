@@ -168,3 +168,28 @@ def list_budget(month=None, year=None):
     print(tabulate(rows, headers=['Category', 'Account', 'Budget', 'Balance'], \
         tablefmt='psql'))
 
+
+def set_budget(category, amount):
+    '''Handler for set budget command'''
+    cur = db.cursor()
+    # Check if category exists
+    exists = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(
+        category)).fetchone()[0]
+    if exists == 0:
+        print('No budget category found named `{}`'.format(category))
+        return
+
+    # Validate amount
+    if float(amount) < 0:
+        print('Budget amount cannot be less than zero.')
+        return
+
+    # Update the budget
+    cur.execute('UPDATE budget_categories SET budget_amount = {} WHERE category_name = "{}"'.format(
+        amount, category))
+    
+    if cur.rowcount != 1:
+        print('Failed to set the budget for `{}`'.format(category))
+        return
+    
+    print('Budget set for category `{}`'.format(category))
