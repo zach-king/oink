@@ -301,11 +301,39 @@ def _edit_transaction(trans_id, description=None, credit=None, amount=None, budg
         budget_category = transaction[3]
 
     # Update where different
-    cur.execute('UPDATE transactions SET description = "{}", credit = {}, \
-        amount = {}, budget_category = "{}" WHERE trans_id = {}'.format(
-            description, credit, amount, budget_category, trans_id
-        ))
-    if cur.rowcount == 1:
+    if budget_category is not None:
+        cur.execute('UPDATE transactions SET description = "{}", credit = {}, \
+            amount = {}, budget_category = "{}" WHERE trans_id = {}'.format(
+                description, credit, amount, budget_category, trans_id
+            ))
+    else:
+        cur.execute('UPDATE transactions SET description = "{}", credit = {}, \
+            amount = {}, budget_category = NULL WHERE trans_id = {}'.format(
+                description, credit, amount, trans_id))
+
+    if cur.rowcount != 1:
+        return False
+
+    # Check for change of credit in case need balance update
+    success = True
+    if credit != transaction[1]:
+        acct = cur.execute('SELECT acct FROM transactions WHERE trans_id = {}'.format(trans_id)).fetchone()[0]
+        if str(credit) == '1':
+            # Need to subtract the amount from the account
+            success = accounts.set_balance(acct, accounts.get_balance(acct) - (transaction[2] + amount))
+        elif str(credit) == '0':
+            # Need to add the amount to the account
+            success = accounts.set_balance(acct, accounts.get_balance(acct) + (transaction[2] + amount))
+    elif amount != transaction[2]:
+        acct = cur.execute('SELECT acct FROM transactions WHERE trans_id = {}'.format(trans_id)).fetchone()[0]
+        if str(credit) == '1':
+            # Need to subtract the amount from the account
+            success = accounts.set_balance(acct, accounts.get_balance(acct) + transaction[2] - amount)
+        elif str(credit) == '0':
+            # Need to add the amount to the account
+            success = accounts.set_balance(acct, accounts.get_balance(acct) - transaction[2] + amount)
+
+    if success:
         db.commit()
         return True
     return False
