@@ -37,11 +37,8 @@ __Transactions__
 - `lt [account] [num]` - List [num] recent transactions for account. Defaults to 10.
 - `at` - Record a new transaction.
 - `ar [source] [dest] [amount]` - Add transfer transaction between two accounts.
-- `dt <id>` - Delete a transaction.
-
-TODO
-
 - `et <id>` - Edit a transaction.
+- `dt <id>` - Delete a transaction.
 
 __Reports__
 

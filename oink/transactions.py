@@ -282,3 +282,86 @@ def delete_transaction(trans_id):
 
     print('Transaction deleted.')
     db.commit()
+
+
+def _edit_transaction(trans_id, description=None, credit=None, amount=None, budget_category=None):
+    '''Helper function for updating a transaction record'''
+    cur = db.cursor()
+    # Get current record
+    transaction = cur.execute('SELECT description, credit, amount, budget_category FROM \
+        transactions WHERE trans_id = {}'.format(trans_id)).fetchone()
+
+    if description is None:
+        description = transaction[0]
+    if credit is None:
+        credit = transaction[1]
+    if amount is None:
+        amount = transaction[2]
+    if budget_category is None:
+        budget_category = transaction[3]
+
+    # Update where different
+    cur.execute('UPDATE transactions SET description = "{}", credit = {}, \
+        amount = {}, budget_category = "{}" WHERE trans_id = {}'.format(
+            description, credit, amount, budget_category, trans_id
+        ))
+    if cur.rowcount == 1:
+        db.commit()
+        return True
+    return False
+
+
+def edit_transaction(trans_id):
+    '''Handler for editing a transaction record'''
+    # Check if transaction id is valid
+    cur = db.cursor()
+    if cur.execute(
+            'SELECT COUNT(*) FROM transactions WHERE trans_id = {}'.format(trans_id)
+    ).fetchone()[0] == 0:
+        print('No transaction was found with ID `{}`'.format(trans_id))
+        return
+
+    # Get the current transaction record
+    transaction = cur.execute('SELECT description, credit, amount, budget_category FROM \
+        transactions WHERE trans_id = {}'.format(trans_id)).fetchone()
+
+    # Get and validate user input
+    desc = input('New description ({}...): '.format(transaction[0][:6]))
+    if len(desc) <= 0:
+        desc = None
+
+    credit = input('Credit (withdrawal) or Debit (deposit)? (C/D): ')
+    if len(credit) <= 0:
+        credit = None
+    elif credit.lower() == 'c':
+        credit = 1
+    elif credit.lower() == 'd':
+        credit = 0
+    else:
+        print('Incorrect entry for credit/debit.')
+        return
+
+    amount = input('Transaction amount (${}): '.format(transaction[2]))
+    if len(amount) <= 0:
+        amount = None
+    else:
+        amount = float(re.sub(r'[^0-9\.]', '', amount))
+
+    category = input('Budget category ({}): '.format(transaction[3]))
+    if category.lower() in ('', 'none', 'null', 'n/a'):
+        category = None
+    else:
+        cur.execute('SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(category))
+        if cur.fetchone()[0] == 0:
+            print('No budget category was found under the name `{}`'.format(category))
+            return
+
+    # Call the helper function
+    success = _edit_transaction(trans_id, desc, credit, amount, category)
+    if success:
+        db.commit()
+        print('Transaction updated')
+        return
+
+    print('Failed to update transaction.')
+    return
