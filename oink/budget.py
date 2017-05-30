@@ -19,6 +19,7 @@ def setup():
         category_name text PRIMARY KEY,
         budget_amount integer NOT NULL,
         budget_acct text NOT NULL,
+        month text NOT NULL,
         FOREIGN_KEY budget_acct
             REFERENCES accounts (name)
             ON UPDATE CASCADE
@@ -92,15 +93,18 @@ def _create_budget(name, amount, acct):
         print('No account was found under the name `{}`.'.format(str(acct)))
         return False
 
+    month = datetime.datetime.now().strftime('%Y-%m')
+
     # ALl checks have passed; create the budget category
     cur.execute(
-        'INSERT INTO budget_categories(category_name, budget_amount, budget_acct) \
-        VALUES (?, ?, ?)', (name, amount, acct)
+        'INSERT INTO budget_categories(category_name, budget_amount, budget_acct, month) \
+        VALUES (?, ?, ?, ?)', (name, amount, acct, month)
     )
 
     # Check that the insertion completed successfully
     success = cur.execute(
-        'SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(name)
+        'SELECT COUNT(*) FROM budget_categories WHERE \
+        category_name = "{}" AND month = "{}"'.format(name, month)
     ).fetchone()[0]
 
     if success:
@@ -112,11 +116,20 @@ def _create_budget(name, amount, acct):
     return False
 
 
-def list_all_budgets():
+def list_all_budgets(month=None):
     '''Handler for listing all budget data'''
     cur = db.cursor()
+    if month is None:
+        month = datetime.datetime.now().strftime('%Y-%m')
+
+    exists = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
+        month = "{}"'.format(month)).fetchone()[0]
+    if exists == 0:
+        print('No budgets were found for the month of `{}`'.format(month))
+        return
+
     cur.execute('SELECT category_name, budget_amount, budget_acct \
-        FROM budget_categories ORDER BY budget_acct DESC')
+        FROM budget_categories WHERE month = "{}" ORDER BY budget_acct DESC'.format(month))
     rows = cur.fetchall()
 
     print(tabulate(rows, headers=['Category', 'Budget', 'Account'], \
@@ -147,7 +160,8 @@ def list_budget(month=None, year=None):
         return
 
     if len(str(month)) == 1:
-        month = '0' + month
+        month = '0' + str(month)
+    budget_month = str(year) + '-' + str(month)
 
     # Loop through budgets, and for the account that is attached to it
     # loop through its transactions, matching the budget category;
@@ -156,7 +170,7 @@ def list_budget(month=None, year=None):
     trans_cur = db.cursor()
     rows = []
     for budget in budget_cur.execute('SELECT category_name, budget_amount, budget_acct \
-        FROM budget_categories'):
+        FROM budget_categories WHERE month = "{}"'.format(budget_month)):
         result = budget[1] # Budget amount
         transaction_query = 'SELECT credit, amount FROM transactions WHERE acct = "{}" AND budget_category = "{}" AND recorded_on LIKE "{}"'
         transaction_query = transaction_query.format(budget[2],  budget[0], str(year) + '-' + str(month) + '%')
@@ -179,17 +193,32 @@ def set_budget(category, amount):
         print('No budget category found named `{}`'.format(category))
         return
 
+    # Check if the budget exists for the *current* month
+    month = datetime.datetime.now().strftime('%Y-%m')
+    exists = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
+        category_name = "{}" AND month = "{}"'.format(category, month)).fetchone()[0]
+
     # Validate amount
     if float(amount) < 0:
         print('Budget amount cannot be less than zero.')
         return
 
+    # If the current month does not exist, create it
+    if not exists:
+        acct = cur.execute('SELECT budget_acct FROM budget_categories \
+            WHERE category_name = "{}"'.format(category)).fetchone()[0]
+        if not _create_budget(category, amount, acct):
+            print('Unable to create new budget for the month of `{}`'.format(month))
+            return
+
     # Update the budget
-    cur.execute('UPDATE budget_categories SET budget_amount = {} WHERE category_name = "{}"'.format(
-        amount, category))
-    
+    cur.execute('UPDATE budget_categories SET budget_amount = {} WHERE \
+    category_name = "{}" AND month = "{}"'.format(
+        amount, category, month))
+
     if cur.rowcount != 1:
         print('Failed to set the budget for `{}`'.format(category))
         return
-    
-    print('Budget set for category `{}`'.format(category))
+
+    print('Budget set for category `{}` for the month of `{}`'.format(category, month))
+    db.commit()
