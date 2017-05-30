@@ -48,12 +48,15 @@ def register_commands():
     Registers all commands with the router class. See router.register() for details.
     '''
     # Accounts commands
+    router.register('header', 'Account', None)
     router.register('la', 'List bank accounts', accounts.list_accounts)
     router.register('aa', 'Add bank account', accounts.add)
     router.register('ra', 'Rename bank account', accounts.rename)
     router.register('da <name>', 'Delete bank account', accounts.delete)
+    router.register('separator', None, None)
 
     # Transaction commands
+    router.register('header', 'Transaction', None)
     router.register('at', 'Record a new transaction', transactions.record_transaction)
     router.register('lt [account] [num]', 'List transactions for an account; ' + \
         'defaults to all accounts and 10 transactions. ' + \
@@ -62,13 +65,16 @@ def register_commands():
         'transaction between two accounts', transactions.add_transfer)
     router.register('et <id>', 'Edit a transaction', transactions.edit_transaction)
     router.register('dt <id>', 'Delete a transaction', transactions.delete_transaction)
+    router.register('separator', None, None)
 
     # Budget commands
+    router.register('header', 'Budget', None)
     router.register('ab', 'Add budget category', budget.create_budget)
     router.register('lb [mm] [yyyy]', 'List all budget categories for a month. ' + \
         'Defaults to current month', budget.list_budget)
     router.register('sb <category> <amount>', 'Set budget ' + \
         'category amount', budget.set_budget)
+    router.register('separator', None, None)
 
     router.register('q', 'Quit Oink', quit_oink)
 

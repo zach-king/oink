@@ -58,6 +58,11 @@ def route(command):
     Handles ensuring the required arguments, if any, are given.
 
     '''
+    # Skip printing helper "commands"
+    if command.lower() in ('separator', 'header'):
+        print('[error] unkown command, type "?" to see commands.')
+        return
+
     bits = command.split(' ')
     keyword = bits[0] # First word (only single word commands supported)
     argstr = ' '.join(bits[1:])
@@ -126,9 +131,15 @@ def show_help():
 
     '''
     for comm in commands:
-        print('{0}{1}'.format(
-            comm['command'].ljust(print_padding + 4),
-            comm['help_text']))
+        if comm['command'] == 'separator':
+            print('\n')
+        elif comm['command'] == 'header':
+            print('[ {0} Commands ]'.format(
+                comm['help_text']).center(print_padding + 4))
+        else:
+            print('{0}{1}'.format(
+                comm['command'].ljust(print_padding + 4),
+                comm['help_text']))
 
 
 def wait():
