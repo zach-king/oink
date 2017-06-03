@@ -26,10 +26,7 @@ __Budget__
 - `ab` - Add new budget category.
 - `lb [mm] [yyyy]` - List all budget categories for a month. Defaults to current month.
 - `sb <category> <amount>` - Set budget category amount for the current month.
-
-TODO
-
-- `eb <category>` - Change budget category name.
+- `rb <oldname> <newname>` - Change budget category name.
 - `db <category>` - Delete budget category.
 
 __Transactions__
