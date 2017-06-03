@@ -255,3 +255,10 @@ def set_balance(acct, new_balance):
         return True
 
     return None
+
+
+def exists(acct):
+    '''Helper function to check if an account exists'''
+    cur = db.cursor()
+    return cur.execute('SELECT COUNT(*) FROM accounts WHERE name = "{}"'.format(
+        acct)).fetchone()[0] != 0
