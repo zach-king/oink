@@ -113,7 +113,8 @@ def route(command):
                 arg_index = command_args_length - given_args_length
                 if arg_index >= len(comm['required_args']):
                     arg_index = 0
-                error = '{} is required'.format(comm['required_args'][arg_index])
+                error = colorize.colorize(comm['required_args'][arg_index], 'blue')
+                error += colorize.colorize(' is required', 'white')
             elif given_args_length > max_args_length:
                 error = '{} argument(s) were expected, but {} were given.'.format(
                     command_args_length, given_args_length)

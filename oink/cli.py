@@ -6,7 +6,8 @@ from __future__ import print_function
 import os
 import sys
 
-from . import accounts, db, router, transactions, budget, reports, colorize
+from . import accounts, db, router, transactions, budget, colorize
+from .reporting import reports
 
 
 TITLE = r'''
