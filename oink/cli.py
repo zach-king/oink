@@ -74,6 +74,7 @@ def register_commands():
         'Defaults to current month', budget.list_budget)
     router.register('sb <category> <amount>', 'Set budget ' + \
         'category amount', budget.set_budget)
+    router.register('rb <oldname> <newname>', 'Rename a budget category', budget.rename_budget)
     router.register('db <category>', 'Delete a budget category', budget.delete_budget)
     router.register('separator', None, None)
 

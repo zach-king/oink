@@ -224,6 +224,40 @@ def set_budget(category, amount):
     db.commit()
 
 
+def rename_budget(category, new_name=None):
+    '''Handler for renaming a budget category'''
+    cur = db.cursor()
+
+    # Check if category exists in db
+    exists = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
+        category_name = "{}"'.format(category)).fetchone()[0]
+    if not exists:
+        print('Budget category `{}` does not exist.'.format(category))
+        return
+
+    # Check if a category already exists with new_name
+    if new_name is None or new_name == '':
+        new_name = input('New category name: ')
+    exists = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
+        category_name = "{}"'.format(new_name)).fetchone()[0]
+    if exists:
+        print('Budget category `{}` already exists.'.format(new_name))
+        return
+
+    # Rename the category
+    cur.execute('UPDATE budget_categories SET category_name = "{}" \
+        WHERE category_name = "{}"'.format(new_name, category))
+
+    # Check for success
+    success = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
+        category_name = "{}"'.format(new_name)).fetchone()[0]
+    if not success:
+        print('Failed to rename the budget category `{}`'.format(category))
+        return
+    print('Budget category `{}` renamed to `{}`'.format(category, new_name))
+    db.commit()
+
+
 def _delete_budget(category):
     '''Helper function for deleting a budget category'''
     cur = db.cursor()
