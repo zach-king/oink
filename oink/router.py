@@ -4,6 +4,8 @@ Handles routing commands to their respective handlers.
 
 from __future__ import print_function
 
+from . import colorize
+
 # Commands stored via register function.
 commands = []
 
@@ -60,7 +62,10 @@ def route(command):
     '''
     # Skip printing helper "commands"
     if command.lower() in ('separator', 'header'):
-        print('[error] unkown command, type "?" to see commands.')
+        colorize.set_color('red')
+        print('[error]', end='')
+        colorize.reset()
+        print(' unkown command, type "?" to see commands.')
         return
 
     bits = command.split(' ')
@@ -118,11 +123,13 @@ def route(command):
                 error = comm['handler'](*args)
 
             if error:
-                print('[error] {}'.format(error))
+                print(colorize.colorize('[error]', 'red'), end='')
+                print(colorize.colorize(' {}'.format(error), 'white'))
 
             return
 
-    print('[error] unkown command, type "?" to see commands.')
+    print(colorize.colorize('[error]', 'red'), end='')
+    print(colorize.colorize(' unkown command, type "?" to see commands.', 'white'))
 
 
 def show_help():
@@ -136,8 +143,11 @@ def show_help():
         if comm['command'] == 'separator':
             print('\n')
         elif comm['command'] == 'header':
-            print('[ {0} Commands ]'.format(
-                comm['help_text']).center(print_padding + 4))
+            print(colorize.colorize(
+                '[ {0} Commands ]'.format(
+                    comm['help_text']).center(print_padding + 4),
+                'green'))
+            colorize.reset()
         else:
             print('{0}{1}'.format(
                 comm['command'].ljust(print_padding + 4),
