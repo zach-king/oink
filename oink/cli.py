@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 import sys
 
-from . import accounts, db, router, transactions, budget, reports
+from . import accounts, db, router, transactions, budget, reports, colorize
 
 
 TITLE = r'''
@@ -92,9 +92,13 @@ def show_welcome_message():
     # Clear screen on initial startup
     os.system('clear' if os.name == 'posix' else 'clr')
 
+    # Set the color to gray
+    colorize.set_color('gray')
+
     print(TITLE)
     print('Welcome to Oink, the CLI budgeting tools for nerds!')
     print('Type ? at any time to see what commands are available.')
+    colorize.reset()
 
 
 def quit_oink():
@@ -126,7 +130,9 @@ def get_installation_path():
             print('Where would you like Oink to save its data?')
             path = input('> ')
             if not os.path.isdir(path):
+                colorize.set_color('red')
                 print('That path doesn\'t exist.')
+                colorize.reset()
                 print('Please enter the full path to an existing folder.')
             else:
                 with open(config_path, 'w') as fout:
