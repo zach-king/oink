@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 import sys
 
-from . import accounts, db, router, transactions, budget
+from . import accounts, db, router, transactions, budget, reports
 
 
 TITLE = r'''
@@ -76,6 +76,10 @@ def register_commands():
         'category amount', budget.set_budget)
     router.register('rb <oldname> <newname>', 'Rename a budget category', budget.rename_budget)
     router.register('db <category>', 'Delete a budget category', budget.delete_budget)
+    router.register('separator', None, None)
+
+    router.register('header', 'Report', None)
+    router.register('rep <account> <file> [format]', 'Generate a report', reports.report)
     router.register('separator', None, None)
 
     router.register('q', 'Quit Oink', quit_oink)
