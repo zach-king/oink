@@ -16,14 +16,15 @@ def setup():
     '''
     budget_categories_sql = '''
     CREATE TABLE IF NOT EXISTS budget_categories (
-        category_name text PRIMARY KEY,
+        category_name text,
         budget_amount integer NOT NULL,
-        budget_acct text NOT NULL,
+		budget_acct text NOT NULL,
         month text NOT NULL,
-        FOREIGN_KEY budget_acct
+        FOREIGN KEY (budget_acct)
             REFERENCES accounts (name)
             ON UPDATE CASCADE
-            ON DELETE CASCADE
+            ON DELETE CASCADE,
+        PRIMARY KEY (category_name, month)
     );
     '''
     cur = db.cursor()
@@ -39,23 +40,23 @@ def create_budget():
     # Data validation
     if budget_name == '' or budget_name is None:
         print('Invalid budget category name `{}`.'.format(budget_name))
-        return False
+        return
 
     budget_amount = input('Budget amount: ')
     try:
         budget_amount = float(budget_amount)
     except ValueError:
         print('Invalid budget amount specified. Amount must be a numeric value.')
-        return False
+        return
 
     if budget_amount < 0 or budget_amount is None:
         print('Invalid budget amount specified. Amount must not be less than zero.')
-        return False
+        return
 
     acct_name = input('Account name: ')
     if acct_name == '' or acct_name is None:
         print('Invalid account name `{}` for budget assignment.'.format(acct_name))
-        return False
+        return
 
     # Create the budget
     _create_budget(budget_name, budget_amount, acct_name)
@@ -67,7 +68,7 @@ def _create_budget(name, amount, acct):
     if name == '' or name is None:
         print('Invalid budget category name `{}`.'.format(str(name)))
         return False
-    if amount < 0 or amount is None:
+    if float(amount) < 0 or amount is None:
         print('Invalid budget amount specified. Amount must not be less than zero.')
         return False
     if acct == '' or acct is None:
@@ -76,8 +77,10 @@ def _create_budget(name, amount, acct):
 
     # Check if the budget name already exists
     cur = db.cursor()
+    month = datetime.datetime.now().strftime('%Y-%m')
     budget_exists = cur.execute(
-        'SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(name)
+        'SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}" \
+        AND month = "{}"'.format(name, month)
     ).fetchone()[0]
 
     if budget_exists:
@@ -93,8 +96,6 @@ def _create_budget(name, amount, acct):
         print('No account was found under the name `{}`.'.format(str(acct)))
         return False
 
-    month = datetime.datetime.now().strftime('%Y-%m')
-
     # ALl checks have passed; create the budget category
     cur.execute(
         'INSERT INTO budget_categories(category_name, budget_amount, budget_acct, month) \
@@ -109,7 +110,6 @@ def _create_budget(name, amount, acct):
 
     if success:
         db.commit()
-        print('New budget category `{}` created successfully.'.format(name))
         return True
 
     print('Failed to create new budget category `{}`.'.format(name))
@@ -222,3 +222,38 @@ def set_budget(category, amount):
 
     print('Budget set for category `{}` for the month of `{}`'.format(category, month))
     db.commit()
+
+
+def _delete_budget(category):
+    '''Helper function for deleting a budget category'''
+    cur = db.cursor()
+    month = datetime.datetime.now().strftime('%Y-%m')
+
+    # Check if category exists in db
+    exists = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
+        category_name = "{}" AND month = "{}"'.format(category, month)).fetchone()[0]
+    if not exists:
+        print('Budget category `{}` does not exist.'.format(category))
+        return False
+
+    # Try to delete the budget category
+    cur.execute('DELETE FROM budget_categories WHERE \
+        category_name = "{}" AND month = "{}"'.format(category, month))
+
+    # Check for success
+    failure = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
+        category_name = "{}" AND month = "{}"'.format(category, month)).fetchone()[0]
+
+    return not failure
+
+
+def delete_budget(category):
+    '''Handler for deleting a budget category'''
+    success = _delete_budget(category)
+    month = datetime.datetime.now().strftime('%Y-%m')
+    if not success:
+        print('Failed to delete budget category `{}`'.format(category))
+    else:
+        print('Budget category `{}` deleted for the month `{}`.'.
+              format(category, month))
+        db.commit()

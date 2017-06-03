@@ -26,13 +26,14 @@ def setup():
             credit integer NOT NULL,
             amount integer NOT NULL,
             budget_category text,
+            budget_month text,
             recorded_on text NOT NULL,
             FOREIGN KEY (acct)
                 REFERENCES accounts (name)
                 ON UPDATE CASCADE
                 ON DELETE CASCADE,
-            FOREIGN KEY (budget_category)
-                REFERENCES budget_categories (category_name)
+            FOREIGN KEY (budget_category, budget_month)
+                REFERENCES budget_categories (category_name, month)
                 ON UPDATE CASCADE
                 ON DELETE CASCADE
         );
