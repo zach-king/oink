@@ -41,7 +41,7 @@ __Reports__
 
 TODO
 
-- `rep <account> <format> <file>` - Generate a report in the specified format, and save it to a file. Should support formats TXT, CSV, and PDF.
+- `rep <account> <file> [format]` - Generate a report in the specified format, and save it to a file. Should support formats TXT, CSV, and PDF.
 
 
 ## TODO
