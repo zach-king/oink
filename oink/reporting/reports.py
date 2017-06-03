@@ -6,7 +6,7 @@ Contains handlers for reporting commands.
 Reports curated budgeting information to file.
 '''
 
-from . import accounts, budget, transactions, db
+from .. import accounts, budget, transactions, db
 
 import os
 
