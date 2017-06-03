@@ -105,7 +105,9 @@ def route(command):
             max_args_length = len(comm['optional_args']) + command_args_length
 
             if given_args_length < command_args_length:
-                arg_index = (command_args_length - given_args_length) - 1
+                arg_index = command_args_length - given_args_length
+                if arg_index >= len(comm['required_args']):
+                    arg_index = 0
                 error = '{} is required'.format(comm['required_args'][arg_index])
             elif given_args_length > max_args_length:
                 error = '{} argument(s) were expected, but {} were given.'.format(
