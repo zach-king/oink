@@ -41,7 +41,7 @@ __Reports__
 
 TODO
 
-- `rep <account> <format> <file>` - Generate a report in the specified format, and save it to a file. Should support formats CSV and PDF.
+- `rep <account> <format> <file>` - Generate a report in the specified format, and save it to a file. Should support formats TXT, CSV, and PDF.
 
 
 ## TODO
@@ -50,7 +50,5 @@ TODO
 - Write unit tests for transactions
 - Add color to output
 - Add tab completion to command input
-- Sort output of commands in their own headers when printing help (should look similar to README)
 - Refactor commands with the optional argument support
 - Should `dt` on a transfer automatically delete *both* transactions?
-- Need a way to show previous budgets (history of budgets)
