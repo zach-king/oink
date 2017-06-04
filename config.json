@@ -5,6 +5,7 @@
         "success": "green",
         "warning": "yellow",
         "input": "cyan",
+        "headers": "blue",
         "default": "white"
     }
 }

@@ -98,3 +98,6 @@ def color_warning(string):
 
 def color_input(string):
     return colorize(string, COLOR_SCHEME['input'])
+
+def colorize_headers(list_of_str):
+    return colorize_list(list_of_str, COLOR_SCHEME['headers'])

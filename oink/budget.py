@@ -8,7 +8,7 @@ import datetime
 from tabulate import tabulate
 
 from . import db
-from .colorize import colorize, reset
+from .colorize import color_error, color_info, color_input, color_success, colorize_headers, colorize
 
 
 def setup():
@@ -36,44 +36,50 @@ def setup():
 def create_budget():
     '''Handler for creating a new budget'''
     # Get the budget category inputs from user
-    budget_name = input('Budget category name: ')
+    budget_name = input(color_input('Budget category name: '))
 
     # Data validation
     if budget_name == '' or budget_name is None:
-        print('Invalid budget category name `{}`.'.format(budget_name))
+        print(color_error('[error]') + ' Invalid budget category name `{}`.'.format(budget_name))
         return
 
-    budget_amount = input('Budget amount: ')
+    budget_amount = input(color_input('Budget amount: '))
     try:
         budget_amount = float(budget_amount)
     except ValueError:
-        print('Invalid budget amount specified. Amount must be a numeric value.')
+        print(color_error('[error]') + ' Invalid budget amount specified. ' + \
+            'Amount must be a numeric value.')
         return
 
     if budget_amount < 0 or budget_amount is None:
-        print('Invalid budget amount specified. Amount must not be less than zero.')
+        print(color_error('[error]') + ' Invalid budget amount specified. ' + \
+            'Amount must not be less than zero.')
         return
 
-    acct_name = input('Account name: ')
+    acct_name = input(color_input('Account name: '))
     if acct_name == '' or acct_name is None:
-        print('Invalid account name `{}` for budget assignment.'.format(acct_name))
+        print(color_error('[error]') + ' Invalid account name ' + \
+            '`{}` for budget assignment.'.format(acct_name))
         return
 
     # Create the budget
-    _create_budget(budget_name, budget_amount, acct_name)
+    if _create_budget(budget_name, budget_amount, acct_name):
+        print(color_success('Budget category created'))
 
 
 def _create_budget(name, amount, acct):
     '''Private function delegated to creating new budgets'''
     # Validate arguments
     if name == '' or name is None:
-        print('Invalid budget category name `{}`.'.format(str(name)))
+        print(color_error('[error]') + ' Invalid budget category name `{}`.'.format(str(name)))
         return False
     if float(amount) < 0 or amount is None:
-        print('Invalid budget amount specified. Amount must not be less than zero.')
+        print(color_error('[error]') + ' Invalid budget amount specified. ' + \
+            'Amount must not be less than zero.')
         return False
     if acct == '' or acct is None:
-        print('Invalid account name `{}` for budget assignment.'.format(str(acct)))
+        print(color_error('[error]') + ' Invalid account name ' + \
+            '`{}` for budget assignment.'.format(str(acct)))
         return False
 
     # Check if the budget name already exists
@@ -85,7 +91,8 @@ def _create_budget(name, amount, acct):
     ).fetchone()[0]
 
     if budget_exists:
-        print('A budget category already exists under the name `{}`.'.format(str(name)))
+        print(color_error('[error]') + ' A budget category already ' + \
+            'exists under the name `{}`.'.format(str(name)))
         return False
 
     # Check if the account tied to this budget exists
@@ -94,7 +101,8 @@ def _create_budget(name, amount, acct):
     ).fetchone()[0]
 
     if not acct_exists:
-        print('No account was found under the name `{}`.'.format(str(acct)))
+        print(color_error('[error]') + ' No account was found under ' + \
+            'the name `{}`.'.format(str(acct)))
         return False
 
     # ALl checks have passed; create the budget category
@@ -113,7 +121,7 @@ def _create_budget(name, amount, acct):
         db.commit()
         return True
 
-    print('Failed to create new budget category `{}`.'.format(name))
+    print(color_error('[error]') + ' Failed to create new budget category `{}`.'.format(name))
     return False
 
 
@@ -133,8 +141,8 @@ def list_all_budgets(month=None):
         FROM budget_categories WHERE month = "{}" ORDER BY budget_acct DESC'.format(month))
     rows = cur.fetchall()
 
-    print(tabulate(rows, headers=['Category', 'Budget', 'Account'], \
-        tablefmt='psql'))
+    headers = colorize_headers(['Cateogory', 'Budget', 'Account'])
+    print(tabulate(rows, headers=headers, tablefmt='psql'))
 
 
 def list_budget(month=None, year=None):
@@ -147,17 +155,17 @@ def list_budget(month=None, year=None):
 
     # Data validation
     if not str(month).isdecimal() or (int(month) < 1 or int(month) > 12):
-        print('Invalid value for <month>. Month should be a number 1-12.')
+        print(color_error('[error]') + ' Invalid value for <month>. Month should be a number 1-12.')
         return
     elif int(month) > datetime.datetime.today().month:
-        print('Cannot list budget data for the future :O')
+        print(color_error('[error]') + ' Cannot list budget data for the future!')
         return
 
     if not str(year).isdecimal() or \
         (int(year) > datetime.datetime.today().year) or \
         len(str(year)) != 4:
-        print('Invalid value for year. Year must be a four-digit integer, ' + \
-        'and cannot be in the future!')
+        print(color_error('[error]') + ' Invalid value for year. Year must be a ' + \
+            'four-digit integer, and cannot be in the future!')
         return
 
     if len(str(month)) == 1:
@@ -173,19 +181,22 @@ def list_budget(month=None, year=None):
     for budget in budget_cur.execute('SELECT category_name, budget_amount, budget_acct \
         FROM budget_categories WHERE month = "{}"'.format(budget_month)):
         result = budget[1] # Budget amount
-        transaction_query = 'SELECT credit, amount FROM transactions WHERE acct = "{}" AND budget_category = "{}" AND recorded_on LIKE "{}"'
-        transaction_query = transaction_query.format(budget[2],  budget[0], str(year) + '-' + str(month) + '%')
+        transaction_query = 'SELECT credit, amount FROM transactions \
+            WHERE acct = "{}" AND budget_category = "{}" AND recorded_on LIKE "{}"'
+        transaction_query = transaction_query.format(
+            budget[2], budget[0], str(year) + '-' + str(month) + '%')
+
         for transaction in trans_cur.execute(transaction_query):
             if transaction[0] == 1:
                 result -= transaction[1]
         if result > 0: # Good; means budget has not run out
-            result = colorize('+' + str(result), 'green')
+            result = colorize(str(result), 'green')
         else:
             result = colorize(str(result), 'red')
         rows.append([budget[0], budget[2], budget[1], result])
 
-    print(tabulate(rows, headers=['Category', 'Account', 'Budget', 'Balance'], \
-        tablefmt='psql'))
+    headers = colorize_headers(['Category', 'Account', 'Budget', 'Balance'])
+    print(tabulate(rows, headers=headers, tablefmt='psql'))
 
 
 def set_budget(category, amount):
@@ -195,7 +206,7 @@ def set_budget(category, amount):
     exists = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(
         category)).fetchone()[0]
     if exists == 0:
-        print('No budget category found named `{}`'.format(category))
+        print(color_error('[error]') + ' No budget category found named `{}`'.format(category))
         return
 
     # Check if the budget exists for the *current* month
@@ -205,7 +216,7 @@ def set_budget(category, amount):
 
     # Validate amount
     if float(amount) < 0:
-        print('Budget amount cannot be less than zero.')
+        print(color_error('[error]') + ' Budget amount cannot be less than zero.')
         return
 
     # If the current month does not exist, create it
@@ -213,7 +224,10 @@ def set_budget(category, amount):
         acct = cur.execute('SELECT budget_acct FROM budget_categories \
             WHERE category_name = "{}"'.format(category)).fetchone()[0]
         if not _create_budget(category, amount, acct):
-            print('Unable to create new budget for the month of `{}`'.format(month))
+            print(
+                color_error('[error]') + ' Unable to create new budget for the month of `{}`'
+                .format(month)
+            )
             return
 
     # Update the budget
@@ -222,10 +236,10 @@ def set_budget(category, amount):
         amount, category, month))
 
     if cur.rowcount != 1:
-        print('Failed to set the budget for `{}`'.format(category))
+        print(color_error('[error]') + ' Failed to set the budget for `{}`'.format(category))
         return
 
-    print('Budget set for category `{}` for the month of `{}`'.format(category, month))
+    print(color_success('Budget set for `{}` for the month of `{}`'.format(category, month)))
     db.commit()
 
 
@@ -237,14 +251,14 @@ def rename_budget(category, new_name):
     exists = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
         category_name = "{}"'.format(category)).fetchone()[0]
     if not exists:
-        print('Budget category `{}` does not exist.'.format(category))
+        print(color_error('[error]') + ' Budget category `{}` does not exist.'.format(category))
         return
 
     # Check if a category already exists with new_name
     exists = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
         category_name = "{}"'.format(new_name)).fetchone()[0]
     if exists:
-        print('Budget category `{}` already exists.'.format(new_name))
+        print(color_error('[error]') + ' Budget category `{}` already exists.'.format(new_name))
         return
 
     # Rename the category
@@ -255,9 +269,9 @@ def rename_budget(category, new_name):
     success = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
         category_name = "{}"'.format(new_name)).fetchone()[0]
     if not success:
-        print('Failed to rename the budget category `{}`'.format(category))
+        print(color_error('[error]') + ' Failed to rename the budget category `{}`'.format(category))
         return
-    print('Budget category `{}` renamed to `{}`'.format(category, new_name))
+    print(color_success('Budget category `{}` renamed to `{}`'.format(category, new_name)))
     db.commit()
 
 
@@ -270,7 +284,7 @@ def _delete_budget(category):
     exists = cur.execute('SELECT COUNT(*) FROM budget_categories WHERE \
         category_name = "{}" AND month = "{}"'.format(category, month)).fetchone()[0]
     if not exists:
-        print('Budget category `{}` does not exist.'.format(category))
+        print(color_error('[error]') + ' Budget category `{}` does not exist.'.format(category))
         return False
 
     # Try to delete the budget category
@@ -288,9 +302,7 @@ def delete_budget(category):
     '''Handler for deleting a budget category'''
     success = _delete_budget(category)
     month = datetime.datetime.now().strftime('%Y-%m')
-    if not success:
-        print('Failed to delete budget category `{}`'.format(category))
-    else:
-        print('Budget category `{}` deleted for the month `{}`.'.
-              format(category, month))
+    if success:
+        print(color_success('Budget category `{}` deleted for the month `{}`.'.
+              format(category, month)))
         db.commit()
