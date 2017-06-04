@@ -7,6 +7,7 @@ File: accounts.py
 from __future__ import print_function
 import re
 from datetime import datetime
+import locale
 
 # 3rd-Party module for tabular console output
 from tabulate import tabulate
@@ -20,6 +21,7 @@ def setup():
     '''
     Initial database setup; creates the `accounts` table
     '''
+    locale.setlocale(locale.LC_ALL, '')
     cur = db.cursor()
     cur.execute('''
         CREATE TABLE IF NOT EXISTS accounts (
@@ -38,8 +40,13 @@ def list_accounts():
     cur = db.cursor()
     cur.execute('SELECT acct_no, name, balance, created_at FROM accounts ORDER BY name')
     rows = cur.fetchall()
+
+    new_rows = []
+
+    for acct in rows:
+        new_rows.append(acct[:2] + (locale.currency(acct[2], grouping=True),) + acct[3:])
     headers = colorize_headers(['Account No.', 'Name', 'Balance', 'Created At'])
-    print(tabulate(rows, headers=headers, tablefmt='psql'))
+    print(tabulate(new_rows, headers=headers, tablefmt='psql'))
 
 
 def rename():
