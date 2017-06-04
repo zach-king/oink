@@ -10,6 +10,7 @@ from datetime import datetime
 from tabulate import tabulate
 
 from . import db, accounts, budget
+from .colorize import color_error, color_info, color_input, color_success, colorize_headers, colorize
 
 
 def setup():
@@ -52,7 +53,7 @@ def _add_transaction(acct, desc, credit, amount, category):
             VALUES ("{}", "{}", {}, {}, NULL, "{}")'.format(acct, desc, credit, amount, recorded_on))
 
     if cur.rowcount == 0:
-        print('Failed to record transaction.')
+        print(color_error('[error]') + ' Failed to record transaction.')
         return
 
     # Now withdraw or deposit from the account as recorded
@@ -73,10 +74,10 @@ def record_transaction():
     Handler to record a new transaction in a given account
     '''
     while True:
-        name = input('Account Name: ')
+        name = input(color_input('Account Name: '))
 
         if len(name) <= 0:
-            print('Record transaction cancelled.')
+            print(color_info('Record transaction cancelled.'))
             return
 
         cur = db.cursor()
@@ -85,49 +86,49 @@ def record_transaction():
         count = result[0]
 
         if count <= 0:
-            print('Sorry, no account was found under the name `{}`.'.format(name))
+            print(color_error('[error]') + ' Sorry, no account was found under the name `{}`.'.format(name))
             continue
 
-        description = input('Transaction description: ')
+        description = input(color_input('Transaction description: '))
         if len(description) <= 0:
-            print('Record transaction cancelled.')
+            print(color_info('Record transaction cancelled.'))
             return
 
-        credit = input('Credit (withdrawal) or Debit (deposit)? (C/D): ')
+        credit = input(color_input('Credit (withdrawal) or Debit (deposit)? (C/D): '))
         if len(credit) <= 0:
-            print('Record transaction cancelled.')
+            print(color_info('Record transaction cancelled.'))
             return
         if credit.lower() == 'c':
             credit = 1
         elif credit.lower() == 'd':
             credit = 0
         else:
-            print('Incorrect entry for credit/debit.')
+            print(color_error('[error]') + ' Incorrect entry for credit/debit.')
             continue
 
-        amount = input('Transaction amount: ')
+        amount = input(color_input('Transaction amount: '))
         if len(amount) <= 0:
-            print('Record transaction cancelled.')
+            print(color_info('Record transaction cancelled.'))
             return
         amount = float(re.sub(r'[^0-9\.]', '', amount))
 
-        category = input('Budget category: ')
+        category = input(color_input('Budget category: '))
         if category.lower() in ('', 'none', 'null', 'n/a'):
             category = 'NULL'
         else:
             cur.execute('SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(category))
             if cur.fetchone()[0] == 0:
-                print('Sorry, no budget category was found under the name `{}`'.format(category))
+                print(color_error('[error]') + ' No budget category was found under the name `{}`'.format(category))
                 continue
 
         # Call the helper function
         success = _add_transaction(name, description, credit, amount, category)
         if success:
             db.commit()
-            print('Transaction recorded')
+            print(color_success('Transaction recorded'))
             return
 
-        print('Failed to update balance.')
+        print(color_error('[error]') + ' Failed to update balance.')
         return
 
 def list_all_transactions(num=10):
@@ -155,9 +156,10 @@ def list_all_transactions(num=10):
             str_amount = '+' + str(row[4])
         new_rows.append(row[:3] + (str_amount,) + row[5:])
 
-    print(tabulate(new_rows, headers=['Transaction #', 'Account', \
-    'Description', 'Amount', 'Category', 'Recorded On'], \
-        tablefmt='psql'))
+    headers = colorize_headers([
+        'Transaction #', 'Account', 'Description',
+        'Amount', 'Category', 'Recorded On'])
+    print(tabulate(new_rows, headers=headers, tablefmt='psql'))
 
 def list_transactions(acct=None, num=10):
     '''
@@ -174,7 +176,7 @@ def list_transactions(acct=None, num=10):
     cur = db.cursor()
     cur.execute('SELECT * FROM accounts WHERE name = "{}"'.format(acct))
     if cur.rowcount == 0:
-        print('No account was found by the name `{}`'.format(acct))
+        print(color_error('[error]') + ' No account was found by the name `{}`'.format(acct))
         return
 
     cur.execute(
@@ -193,9 +195,11 @@ def list_transactions(acct=None, num=10):
             str_amount = '+' + str(row[4])
         new_rows.append(row[:3] + (str_amount,) + row[5:])
 
-    print(tabulate(new_rows, headers=['Transaction #', 'Account', \
-        'Description', 'Amount', 'Category', 'Recorded On'], \
-        tablefmt='psql'))
+    headers = colorize_headers([
+        'Transaction #', 'Account', 'Description',
+        'Amount', 'Category', 'Recorded On'
+    ])
+    print(tabulate(new_rows, headers=headers, tablefmt='psql'))
 
 
 def add_transfer(source_acct=None, dest_acct=None, amount=None):
@@ -204,33 +208,33 @@ def add_transfer(source_acct=None, dest_acct=None, amount=None):
     cur = db.cursor()
     accts = [acct[0] for acct in cur.execute('SELECT name FROM accounts')]
     if source_acct is None:
-        source_acct = input('Source account name: ')
+        source_acct = input(color_input('Source account name: '))
     if source_acct == '':
-        print('Transfer transaction cancelled.')
+        print(color_info('Transfer transaction cancelled.'))
         return
     if source_acct not in accts:
-        print('The source account `{}` does not exist.'.format(source_acct))
+        print(color_error('[error]') + ' The source account `{}` does not exist.'.format(source_acct))
         return
 
     if dest_acct is None:
-        dest_acct = input('Destination account name: ')
+        dest_acct = input(color_input('Destination account name: '))
     if dest_acct == '':
-        print('Transfer transaction cancelled.')
+        print(color_info('Transfer transaction cancelled.'))
         return
     if dest_acct not in accts:
-        print('The destination account `{}` does not exist.'.format(dest_acct))
+        print(color_error('[error]') + ' The destination account `{}` does not exist.'.format(dest_acct))
         return
 
     if amount is None:
-        amount = input('Amount to transfer: ')
+        amount = input(color_input('Amount to transfer: '))
     try:
         amount = float(amount)
     except ValueError:
-        print('The amount must be a number!')
+        print(color_error('[error]') + ' The amount must be a number!')
         return
     else:
         if amount <= 0:
-            print('The amount must be greater than zero!')
+            print(color_error('[error]') + ' The amount must be greater than zero!')
             return
 
     # Make the two transactions on the accounts
@@ -238,11 +242,11 @@ def add_transfer(source_acct=None, dest_acct=None, amount=None):
     success = success and _add_transaction(dest_acct, 'Transfer from `{}`'.format(source_acct), 0, amount, None)
 
     if success:
-        print('Transfer from `{}` to `{}` recorded.'.format(source_acct, dest_acct))
+        print(color_success('Transfer from `{}` to `{}` recorded.'.format(source_acct, dest_acct)))
         db.commit()
         return
 
-    print('Failed to record transfer transaction from `{}` to `{}`.'.format(source_acct, dest_acct))
+    print(color_error('[error]') + ' Failed to record transfer transaction from `{}` to `{}`.'.format(source_acct, dest_acct))
 
 
 def delete_transaction(trans_id):
@@ -250,18 +254,18 @@ def delete_transaction(trans_id):
     # Validate the transaction id
     cur = db.cursor()
     if trans_id == '' or trans_id is None:
-        print('Delete transaction cancelled.')
+        print(color_info('Delete transaction cancelled.'))
         return
 
     try:
         trans_id = int(trans_id)
     except ValueError:
-        print('Transaction ID must be an integer!')
+        print(color_error('[error]') + ' Transaction ID must be an integer!')
         return
 
     rows = cur.execute('SELECT COUNT(*) FROM transactions WHERE trans_id = {}'.format(trans_id)).fetchone()
     if rows[0] != 1:
-        print('No transaction was found with ID `{}`'.format(trans_id))
+        print(color_error('[error]') + ' No transaction was found with ID `{}`'.format(trans_id))
         return
 
     # Counter the transaction effect
@@ -278,10 +282,10 @@ def delete_transaction(trans_id):
     # Valid and exists so delete
     cur.execute('DELETE FROM transactions WHERE trans_id = {}'.format(trans_id))
     if cur.execute('SELECT COUNT(*) FROM transactions WHERE trans_id = {}'.format(trans_id)).fetchone()[0] != 0:
-        print('Failed to delete transaction.')
+        print(color_error('[error]') + ' Failed to delete transaction.')
         return
 
-    print('Transaction deleted.')
+    print(color_success('Transaction deleted.'))
     db.commit()
 
 
@@ -355,11 +359,11 @@ def edit_transaction(trans_id):
         transactions WHERE trans_id = {}'.format(trans_id)).fetchone()
 
     # Get and validate user input
-    desc = input('New description ({}...): '.format(transaction[0][:6]))
+    desc = input(color_input('New description ({}...): '.format(transaction[0][:6])))
     if len(desc) <= 0:
         desc = None
 
-    credit = input('Credit (withdrawal) or Debit (deposit)? (C/D): ')
+    credit = input(color_input('Credit (withdrawal) or Debit (deposit)? (C/D): '))
     if len(credit) <= 0:
         credit = None
     elif credit.lower() == 'c':
@@ -367,30 +371,30 @@ def edit_transaction(trans_id):
     elif credit.lower() == 'd':
         credit = 0
     else:
-        print('Incorrect entry for credit/debit.')
+        print(color_error('[error]') + ' Incorrect entry for credit/debit.')
         return
 
-    amount = input('Transaction amount (${}): '.format(transaction[2]))
+    amount = input(color_input('Transaction amount (${}): '.format(transaction[2])))
     if len(amount) <= 0:
         amount = None
     else:
         amount = float(re.sub(r'[^0-9\.]', '', amount))
 
-    category = input('Budget category ({}): '.format(transaction[3]))
+    category = input(color_input('Budget category ({}): '.format(transaction[3])))
     if category.lower() in ('', 'none', 'null', 'n/a'):
         category = None
     else:
         cur.execute('SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(category))
         if cur.fetchone()[0] == 0:
-            print('No budget category was found under the name `{}`'.format(category))
+            print(color_error('[error]') + ' No budget category was found under the name `{}`'.format(category))
             return
 
     # Call the helper function
     success = _edit_transaction(trans_id, desc, credit, amount, category)
     if success:
         db.commit()
-        print('Transaction updated')
+        print(color_success('Transaction updated'))
         return
 
-    print('Failed to update transaction.')
+    print(color_error('[error]') + ' Failed to update transaction.')
     return
