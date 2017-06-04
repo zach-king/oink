@@ -12,6 +12,7 @@ from datetime import datetime
 from tabulate import tabulate
 
 from . import db
+from .colorize import colorize, colorize_list
 
 
 def setup():
@@ -21,7 +22,7 @@ def setup():
     cur = db.cursor()
     cur.execute('''
         CREATE TABLE IF NOT EXISTS accounts (
-            acct_no integer NOT NULL PRIMARY KEY,
+            acct_no text NOT NULL PRIMARY KEY,
             name text NOT NULL UNIQUE, 
             balance integer NOT NULL, 
             created_at text NOT NULL);
@@ -36,7 +37,9 @@ def list_accounts():
     cur = db.cursor()
     cur.execute('SELECT acct_no, name, balance, created_at FROM accounts ORDER BY name')
     rows = cur.fetchall()
-    print(tabulate(rows, headers=['Account No.', 'Name', 'Balance', 'Created At'], tablefmt='psql'))
+    headers = ['Account No.', 'Name', 'Balance', 'Created At']
+    headers = colorize_list(headers, 'blue')
+    print(tabulate(rows, headers=headers, tablefmt='psql'))
 
 
 def rename():
@@ -45,51 +48,34 @@ def rename():
     '''
     while True:
         # Get old account name
-        oldname = input('Account name or number: ')
+        oldname = input(colorize('Account name: ', 'purple'))
 
         # Validate
         if len(oldname) <= 0:
-            print('Rename account cancelled.')
+            print(colorize('Rename account cancelled.', 'gray'))
             return
 
         cur = db.cursor()
 
-        # Did the user enter an account number (most likely, can't tell for sure)?
-        found = False
-        acct_no = None
-        result = None
-        if oldname.isdigit():
-            cur.execute('SELECT COUNT(*) FROM accounts WHERE acct_no = "' + oldname + '"')
-            result = cur.fetchone()
-            count = result[0]
-
-            # Check if found by account number
-            if count == 1:
-                found = True
-                acct_no = oldname
-
-        # Try finding it by name
-        if not found:
-            count = cur.execute('SELECT COUNT(*) FROM accounts WHERE name = "{}"'.format(oldname))
-            cur.execute('SELECT acct_no, name FROM accounts WHERE name = "' + oldname + '"')
-            result = cur.fetchall()
-
-            # Check if found by name
-            if count != 0:
-                found = True
-                acct_no = result[0][0]
+        count = cur.execute('SELECT COUNT(*) FROM accounts \
+            WHERE name = "{}"'.format(oldname)).fetchone()[0]
 
         # Check if still haven't found the account
-        if not found:
-            print('Sorry, no account was found by the name `' + oldname + '`\n')
+        if count == 0:
+            print(colorize('[error]', 'red') + ' Sorry, no account ' + \
+                'was found by the name `{}`\n'.format(oldname))
             continue
 
+        result = cur.execute('SELECT acct_no, name FROM accounts \
+            WHERE name = "' + oldname + '"').fetchone()
+        acct_no = result[0]
+
         # Get new name
-        newname = input('New Account Name: ')
+        newname = input(colorize('New Account Name: ', 'purple'))
 
         # Validate
         if len(newname) <= 0:
-            print('Invalid account name')
+            print(colorize('[error]', 'red') + ' Invalid account name')
             continue
 
         # Rename the old account
@@ -97,12 +83,14 @@ def rename():
 
         # Verify successfulness
         if cur.rowcount == 0:
-            print('Failed to rename the account.')
+            print(colorize('[error]', 'red') + ' Failed to rename the account.')
             return
 
         # Save the changes to the database
         db.commit()
-        print('The account `{}` was successfully renamed to `{}`'.format(result[0][1], newname))
+        print(colorize(
+            'The account `{}` was successfully renamed to `{}`'.format(result[1], newname),
+            'blue'))
         return
 
 
@@ -111,7 +99,7 @@ def add_account(acct_no, acct_name, start_balance, created_on):
     Helper to add/insert a new account into the `accounts` table
     '''
     # Validation
-    if acct_no == '' or acct_no is None or acct_no < 0:
+    if acct_no == '' or acct_no is None or not acct_no.isdigit():
         raise ValueError('Invalid account number')
     if acct_name == '' or acct_name is None:
         raise ValueError('Invalid account name')
@@ -132,48 +120,40 @@ def add():
     '''
     while True:
         # Read in the account number and validate
-        acct_no = input('Account number: ')
+        acct_no = input(colorize('Account number: ', 'purple'))
 
         if len(acct_no) <= 0:
-            print('Add account cancelled.')
+            print(colorize('Add account cancelled.', 'gray'))
             return
         elif not acct_no.isdigit():
-            print('Only numerical digits are allowed.')
+            print(colorize('[error]', 'red') + ' Only numerical digits are allowed.')
             continue
 
-        acct_no = int(acct_no)
-
-        # Read in the account name and validate
-        name = input('Account Name: ')
-
-        if len(name) <= 0:
-            print('Add account cancelled.')
-            return
-
+        # Validate acct_no
         cur = db.cursor()
         cur.execute('SELECT COUNT(*) FROM accounts WHERE acct_no = ?', (acct_no,))
         result = cur.fetchone()
         count = result[0]
 
         if count > 0:
-            print('That account number already exists.')
+            print(colorize('[error]', 'red') + ' That account number already exists.')
             continue
 
-        starting_balance = input('Starting balance: ')
+        # Read in the account name and validate
+        name = input(colorize('Account Name: ', 'purple'))
+
+        if len(name) <= 0:
+            print(colorize('Add account cancelled.', 'gray'))
+            return
+
+        starting_balance = input(colorize('Starting balance: ', 'purple'))
         starting_balance = float(re.sub(r'[^0-9\.]', '', starting_balance))
 
         created_at = datetime.now().strftime('%Y-%m-%d')
 
         add_account(acct_no, name, starting_balance, created_at)
-        print('Account created')
+        print(colorize('Account created', 'blue'))
         return
-
-
-def edit(account_name):
-    '''
-    Handler to edit an existing account in the `accounts` table
-    '''
-    print('TODO: edit account {0}'.format(account_name))
 
 
 def delete(account_name):
@@ -187,7 +167,8 @@ def delete(account_name):
         cur.execute('SELECT COUNT(*) FROM accounts WHERE name = "{}"'.format(account_name))
         count = cur.fetchone()[0]
         if count == 0:
-            print('Sorry, no account was found by the name `{}`'.format(account_name))
+            print(colorize('[error]', 'red') + \
+                ' No account was found by the name `{}`'.format(account_name))
             return
 
         # Delete the account
@@ -195,10 +176,11 @@ def delete(account_name):
 
         # Verify successfulness
         if cur.rowcount == 0:
-            print('Failed to delete the account `{}`'.format(account_name))
+            print(colorize('[error]', 'red') + \
+                ' Failed to delete the account `{}`'.format(account_name))
             return
 
-        print('Deleted account `{}`'.format(account_name))
+        print(colorize('Deleted account `{}`'.format(account_name), 'blue'))
         db.commit()
         return
 
@@ -216,14 +198,16 @@ def get_balance(acct):
         # Find by account name
         cur.execute('SELECT balance FROM accounts WHERE name = "{}"'.format(acct))
         if cur.rowcount == 0:
-            print('No account was found by the name `{}`'.format(acct))
+            print(colorize('[error]', 'red') + \
+                ' No account was found by the name `{}`'.format(acct))
             return None
         return cur.fetchone()[0] # Return the balance, if found
     elif isinstance(acct, int):
         # Find by account number
         cur.execute('SELECT balance FROM accounts WHERE acct_no = {}'.format(acct))
         if cur.rowcount == 0:
-            print('No account was found by the number `{}`'.format(acct))
+            print(colorize('[error]', 'red') + \
+                ' No account was found by the number `{}`'.format(acct))
             return None
         return cur.fetchone()[0] # Return the balance, if found
 
@@ -243,14 +227,16 @@ def set_balance(acct, new_balance):
         # Find by account name
         cur.execute('UPDATE accounts SET balance = {} WHERE name = "{}"'.format(new_balance, acct))
         if cur.rowcount == 0:
-            print('No account was found by the name `{}`'.format(acct))
+            print(colorize('[error]', 'red') + \
+                ' No account was found by the name `{}`'.format(acct))
             return False
         return True
     elif isinstance(acct, int):
         # Find by account number
         cur.execute('UPDATE accounts SET balance = {} WHERE acct_no = {}'.format(new_balance, acct))
         if cur.rowcount == 0:
-            print('No account was found by the number `{}`'.format(acct))
+            print(colorize('[error]', 'red') + \
+                ' No account was found by the number `{}`'.format(acct))
             return False
         return True
 

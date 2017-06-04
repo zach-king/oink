@@ -181,7 +181,7 @@ def list_budget(month=None, year=None):
         if result > 0: # Good; means budget has not run out
             result = colorize('+' + str(result), 'green')
         else:
-            result = colorize(str(reset), 'red')
+            result = colorize(str(result), 'red')
         rows.append([budget[0], budget[2], budget[1], result])
 
     print(tabulate(rows, headers=['Category', 'Account', 'Budget', 'Balance'], \

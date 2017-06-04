@@ -12,14 +12,14 @@ CODES = {
     'green': '32',
     'yellow': '33',
     'blue': '34',
-    'magenta': '35',
+    'purple': '35',
     'cyan': '36',
     'white': '37',
     'hred': '41',
     'hgreen': '42',
     'hbrown': '43',
     'hblue': '44',
-    'hmagenta': '45',
+    'hpurple': '45',
     'hcyan': '46',
     'hgray': '47',
 }
@@ -49,3 +49,16 @@ def set_color(color):
 
     set_str = '\033[1;{}m\033[1;m'.format(CODES[color])
     print(set_str, end='')
+
+
+def colorize_list(lyst_of_str, color_or_list):
+    '''Colorizes each string in a list.
+    Second argument can be a list of valid color strings
+    to be applied to the corresponding list element'''
+    colored_list = []
+    if not isinstance(color_or_list, list):
+        color_or_list = [color_or_list] * len(lyst_of_str) # ['blue', 'blue',  'blue', ...]
+
+    for i, string in enumerate(lyst_of_str):
+        colored_list.append(colorize(string, color_or_list[i]))
+    return colored_list
