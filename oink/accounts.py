@@ -12,7 +12,7 @@ from datetime import datetime
 from tabulate import tabulate
 
 from . import db
-from .colorize import colorize, colorize_list
+from .colorize import colorize, colorize_headers
 from .colorize import color_input, color_error, color_info, color_success
 
 
@@ -38,8 +38,7 @@ def list_accounts():
     cur = db.cursor()
     cur.execute('SELECT acct_no, name, balance, created_at FROM accounts ORDER BY name')
     rows = cur.fetchall()
-    headers = ['Account No.', 'Name', 'Balance', 'Created At']
-    headers = colorize_list(headers, 'blue')
+    headers = colorize_headers(['Account No.', 'Name', 'Balance', 'Created At'])
     print(tabulate(rows, headers=headers, tablefmt='psql'))
 
 
