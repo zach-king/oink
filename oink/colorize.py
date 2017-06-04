@@ -31,7 +31,7 @@ def colorize(string, color):
 
     color = color.lower()
 
-    padded_str = '\033[1;{0}m{1}\033[1;m'
+    padded_str = '\033[1;{0}m{1}\033[1;m\033[1;37m\033[1;m'
     return padded_str.format(CODES[color], string)
 
 
@@ -43,5 +43,9 @@ def reset():
 
 def set_color(color):
     '''Sets the buffer color'''
-    set_str = colorize('', color)
+    if color not in CODES or not isinstance(color, str):
+        color = 'white'
+    color = color.lower()
+
+    set_str = '\033[1;{}m\033[1;m'.format(CODES[color])
     print(set_str, end='')

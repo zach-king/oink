@@ -8,6 +8,7 @@ import datetime
 from tabulate import tabulate
 
 from . import db
+from .colorize import colorize, reset
 
 
 def setup():
@@ -177,6 +178,10 @@ def list_budget(month=None, year=None):
         for transaction in trans_cur.execute(transaction_query):
             if transaction[0] == 1:
                 result -= transaction[1]
+        if result > 0: # Good; means budget has not run out
+            result = colorize('+' + str(result), 'green')
+        else:
+            result = colorize(str(reset), 'red')
         rows.append([budget[0], budget[2], budget[1], result])
 
     print(tabulate(rows, headers=['Category', 'Account', 'Budget', 'Balance'], \

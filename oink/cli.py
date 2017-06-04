@@ -91,7 +91,7 @@ def show_welcome_message():
     Clear screen and show the welcome to Oink message.
     '''
     # Clear screen on initial startup
-    os.system('clear' if os.name == 'posix' else 'clr')
+    os.system('clear' if os.name == 'posix' else 'cls')
 
     # Set the color to gray
     colorize.set_color('gray')

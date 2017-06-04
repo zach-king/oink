@@ -4,7 +4,7 @@ Handles routing commands to their respective handlers.
 
 from __future__ import print_function
 
-from . import colorize
+from .colorize import colorize
 
 # Commands stored via register function.
 commands = []
@@ -62,9 +62,7 @@ def route(command):
     '''
     # Skip printing helper "commands"
     if command.lower() in ('separator', 'header'):
-        colorize.set_color('red')
-        print('[error]', end='')
-        colorize.reset()
+        print(colorize('[error]', 'red'), end='')
         print(' unkown command, type "?" to see commands.')
         return
 
@@ -113,8 +111,7 @@ def route(command):
                 arg_index = command_args_length - given_args_length
                 if arg_index >= len(comm['required_args']):
                     arg_index = 0
-                error = colorize.colorize(comm['required_args'][arg_index], 'blue')
-                error += colorize.colorize(' is required', 'white')
+                error = colorize(comm['required_args'][arg_index], 'blue') + ' is required'
             elif given_args_length > max_args_length:
                 error = '{} argument(s) were expected, but {} were given.'.format(
                     command_args_length, given_args_length)
@@ -124,13 +121,11 @@ def route(command):
                 error = comm['handler'](*args)
 
             if error:
-                print(colorize.colorize('[error]', 'red'), end='')
-                print(colorize.colorize(' {}'.format(error), 'white'))
+                print(colorize('[error]', 'red') + ' {}'.format(error))
 
             return
 
-    print(colorize.colorize('[error]', 'red'), end='')
-    print(colorize.colorize(' unkown command, type "?" to see commands.', 'white'))
+    print(colorize('[error]', 'red') + ' unkown command, type "?" to see commands.')
 
 
 def show_help():
@@ -144,11 +139,10 @@ def show_help():
         if comm['command'] == 'separator':
             print('\n')
         elif comm['command'] == 'header':
-            print(colorize.colorize(
+            print(colorize(
                 '[ {0} Commands ]'.format(
                     comm['help_text']).center(print_padding + 4),
                 'green'))
-            colorize.reset()
         else:
             print('{0}{1}'.format(
                 comm['command'].ljust(print_padding + 4),
