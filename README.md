@@ -52,3 +52,4 @@ TODO
 - Add tab completion to command input
 - Refactor commands with the optional argument support
 - Should `dt` on a transfer automatically delete *both* transactions?
+- Format all monetary output to two decimal places and a dollar sign
