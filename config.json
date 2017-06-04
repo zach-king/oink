@@ -1,0 +1,10 @@
+{
+    "colorscheme": {
+        "info": "blue",
+        "error": "red",
+        "success": "green",
+        "warning": "yellow",
+        "input": "cyan",
+        "default": "white"
+    }
+}

@@ -6,6 +6,8 @@ Utility for adding ANSI escape codes to a string
 to add color to terminal output
 '''
 
+import json
+
 CODES = {
     'gray': '30',
     'red': '31',
@@ -23,6 +25,8 @@ CODES = {
     'hcyan': '46',
     'hgray': '47',
 }
+
+COLOR_SCHEME = {}
 
 def colorize(string, color):
     '''Pads a string with ANSI esacpe codes to add color'''
@@ -62,3 +66,35 @@ def colorize_list(lyst_of_str, color_or_list):
     for i, string in enumerate(lyst_of_str):
         colored_list.append(colorize(string, color_or_list[i]))
     return colored_list
+
+
+def load_color_scheme():
+    '''Loads the color scheme from json config file'''
+    global COLOR_SCHEME
+    config = None
+    with open('config.json') as fin:
+        config = json.load(fin)
+    COLOR_SCHEME = config['colorscheme']
+
+
+def cprint(string, color):
+    '''Shortcut function for printing the colored output'''
+    print(colorize(string, color))
+
+# Load color scheme
+load_color_scheme()
+
+def color_info(string):
+    return colorize(string, COLOR_SCHEME['info'])
+
+def color_error(string):
+    return colorize(string, COLOR_SCHEME['error'])
+
+def color_success(string):
+    return colorize(string, COLOR_SCHEME['success'])
+
+def color_warning(string):
+    return colorize(string, COLOR_SCHEME['warning'])
+
+def color_input(string):
+    return colorize(string, COLOR_SCHEME['input'])
