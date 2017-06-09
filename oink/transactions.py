@@ -5,6 +5,7 @@ File: transactions.py
 from __future__ import print_function
 import re
 from datetime import datetime
+import locale
 
 # 3rd-Party module for tabular console output
 from tabulate import tabulate
@@ -17,6 +18,7 @@ def setup():
     '''
     Initial database setup; creates the `transactions` table
     '''
+    locale.setlocale(locale.LC_ALL, '')
     cur = db.cursor()
     cur.execute(
         '''
@@ -151,9 +153,9 @@ def list_all_transactions(num=10):
     for row in rows:
         str_amount = ''
         if row[3] == 1: # Credit
-            str_amount = '-' + str(row[4])
+            str_amount = '-' + str(locale.currency(row[4], grouping=True))
         else:
-            str_amount = '+' + str(row[4])
+            str_amount = '+' + str(locale.currency(row[4], grouping=True))
         new_rows.append(row[:3] + (str_amount,) + row[5:])
 
     headers = colorize_headers([
@@ -190,9 +192,9 @@ def list_transactions(acct=None, num=10):
     for row in rows:
         str_amount = ''
         if row[3] == 1: # Credit
-            str_amount = '-' + str(row[4])
+            str_amount = '-' + str(locale.currency(row[4], grouping=True))
         else:
-            str_amount = '+' + str(row[4])
+            str_amount = '+' + str(locale.currency(row[4], grouping=True))
         new_rows.append(row[:3] + (str_amount,) + row[5:])
 
     headers = colorize_headers([

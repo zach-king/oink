@@ -4,6 +4,7 @@ File: budget.py
 
 from __future__ import print_function
 import datetime
+import locale
 
 from tabulate import tabulate
 
@@ -15,6 +16,7 @@ def setup():
     '''
     Setup budgeting table(s).
     '''
+    locale.setlocale(locale.LC_ALL, '')
     budget_categories_sql = '''
     CREATE TABLE IF NOT EXISTS budget_categories (
         category_name text,
@@ -141,8 +143,12 @@ def list_all_budgets(month=None):
         FROM budget_categories WHERE month = "{}" ORDER BY budget_acct DESC'.format(month))
     rows = cur.fetchall()
 
+    new_rows = []
+    for row in rows:
+        new_rows.append(row[:1] + (locale.currency(row[1], grouping=True),) + row[1:])
+
     headers = colorize_headers(['Cateogory', 'Budget', 'Account'])
-    print(tabulate(rows, headers=headers, tablefmt='psql'))
+    print(tabulate(new_rows, headers=headers, tablefmt='psql'))
 
 
 def list_budget(month=None, year=None):
@@ -190,9 +196,9 @@ def list_budget(month=None, year=None):
             if transaction[0] == 1:
                 result -= transaction[1]
         if result > 0: # Good; means budget has not run out
-            result = colorize(str(result), 'green')
+            result = colorize('+' + str(locale.currency(result, grouping=True)), 'green')
         else:
-            result = colorize(str(result), 'red')
+            result = colorize('-' + str(locale.currency(-1 * result, grouping=True)), 'red')
         rows.append([budget[0], budget[2], budget[1], result])
 
     headers = colorize_headers(['Category', 'Account', 'Budget', 'Balance'])
