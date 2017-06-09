@@ -131,9 +131,7 @@ def get_installation_path():
             print('Where would you like Oink to save its data?')
             path = input('> ')
             if not os.path.isdir(path):
-                colorize.set_color('red')
-                print('That path doesn\'t exist.')
-                colorize.reset()
+                print(colorize.color_error('[error]') + ' That path doesn\'t exist.')
                 print('Please enter the full path to an existing folder.')
             else:
                 with open(config_path, 'w') as fout:
