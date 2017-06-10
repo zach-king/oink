@@ -5,6 +5,7 @@ File: cli.py
 from __future__ import print_function
 import os
 import sys
+import json
 
 from . import accounts, db, router, transactions, budget, colorize
 from .reporting import reports
@@ -28,6 +29,7 @@ def main():
 
     '''
     installation_path = get_installation_path()
+    colorize.load_color_scheme()
     db.connect(installation_path)
 
     # Setup the tables for the database
@@ -120,20 +122,45 @@ def get_installation_path():
     path the the oink.db file.
 
     '''
-    config_path = os.path.join(os.path.expanduser('~'), '.oink')
+    if not os.path.exists(os.path.join(os.path.expanduser('~'), '.oink')):
+        os.mkdir(os.path.join(os.path.expanduser('~'), '.oink'))
+
+    config_dir = os.path.join(os.path.expanduser('~'), '.oink')
+    config_path = os.path.join(config_dir, 'config.json')
 
     if os.path.isfile(config_path):
         with open(config_path, 'r') as fin:
-            return fin.read()
+            config = json.load(fin)
 
-    else:
-        while True:
-            print('Where would you like Oink to save its data?')
-            path = input('> ')
-            if not os.path.isdir(path):
-                print(colorize.color_error('[error]') + ' That path doesn\'t exist.')
-                print('Please enter the full path to an existing folder.')
+            if config['databasePath'] != "":
+                return config['databasePath']
             else:
-                with open(config_path, 'w') as fout:
-                    fout.write(path)
-                return path
+                while True:
+                    print('Where would you like Oink to save its data?')
+                    path = input('> ')
+                    if not os.path.isdir(path):
+                        print(colorize.color_error('[error]') + ' That path doesn\'t exist.')
+                        print('Please enter the full path to an existing folder.')
+                    else:
+                        config['databasePath'] = path
+                        with open(config_path, 'w') as fout:
+                            json.dump(config, fout, indent=4)
+                        return path
+    else:
+        if not os.path.exists(config_dir):
+            os.mkdir(config_dir)
+        with open(config_path, 'w') as fout:
+            default_config = {
+                "colorscheme": {
+                    "info": "blue",
+                    "error": "red",
+                    "success": "green",
+                    "warning": "yellow",
+                    "input": "cyan",
+                    "headers": "blue",
+                    "default": "white"
+                },
+                "databasePath": ""
+            }
+            json.dump(default_config, fout, indent=4)
+        return get_installation_path()

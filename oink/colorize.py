@@ -7,6 +7,7 @@ to add color to terminal output
 '''
 
 import json
+import os
 
 CODES = {
     'gray': '30',
@@ -72,7 +73,7 @@ def load_color_scheme():
     '''Loads the color scheme from json config file'''
     global COLOR_SCHEME
     config = None
-    with open('config.json') as fin:
+    with open(os.path.join(os.path.expanduser('~'), '.oink', 'config.json')) as fin:
         config = json.load(fin)
     COLOR_SCHEME = config['colorscheme']
 
@@ -80,9 +81,6 @@ def load_color_scheme():
 def cprint(string, color):
     '''Shortcut function for printing the colored output'''
     print(colorize(string, color))
-
-# Load color scheme
-load_color_scheme()
 
 def color_info(string):
     return colorize(string, COLOR_SCHEME['info'])
