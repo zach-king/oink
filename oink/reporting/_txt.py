@@ -6,13 +6,12 @@ Author: Zachary King
 Implements the .txt report generation for Oink
 '''
 
-import os
 from datetime import datetime
 import locale
 
-from .. import accounts, transactions, budget, db, colorize
-
 from tabulate import tabulate
+
+from .. import accounts, db
 
 REPORT_WIDTH = 100
 
