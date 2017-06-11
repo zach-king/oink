@@ -7,7 +7,7 @@ Reports curated budgeting information to file.
 '''
 
 from .. import accounts, budget, transactions, db, colorize
-from . import _txt
+from . import _txt, _html
 
 import os
 
@@ -26,6 +26,12 @@ def report(acct, path, fmt='txt'):
     # Check if file exists already
     if path == '' or path is None:
         print('Invalid file path given')
+        return
+
+    fmt = fmt.lower()
+    if fmt not in VALID_FORMATS:
+        print(colorize.color_error('[error]') + ' Unsupported report format `{}`'.format(fmt))
+        print('Supported formats are ' + ', '.join([f.upper() for f in VALID_FORMATS]))
         return
 
     dirpath, filepath = os.path.split(path)
@@ -49,12 +55,6 @@ def report(acct, path, fmt='txt'):
             if overwrite in ('n', 'no', '0'):
                 print(colorize.color_info('Report generation cancelled'))
                 return
-
-    fmt = fmt.lower()
-    if fmt not in VALID_FORMATS:
-        print('Unsupported report format `{}`'.format(fmt))
-        print('Supported formats are ' + ','.join([f.upper() for f in VALID_FORMATS]))
-        return
 
     # Get account id
     cur = db.cursor()
@@ -82,7 +82,7 @@ def _report_csv(acct_id, acct_name, path):
 
 
 def _report_html(acct_id, acct_name, path):
-    pass
+    _html.generate_html_report(acct_id, acct_name, path)
 
 
 def _report_pdf(acct_id, acct_name, path):
