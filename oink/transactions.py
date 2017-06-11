@@ -48,8 +48,8 @@ def _add_transaction(acct, desc, credit, amount, category):
     cur = db.cursor()
     recorded_on = datetime.now().strftime('%Y-%m-%d')
     if category not in ('', 'null', 'NULL', None):
-        cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
-            VALUES ("{}", "{}", {}, {}, "{}", "{}")'.format(acct, desc, credit, amount, category, recorded_on))
+        cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on, budget_month) \
+            VALUES ("{}", "{}", {}, {}, "{}", "{}", "{}")'.format(acct, desc, credit, amount, category, recorded_on, datetime.now().strftime('%Y-%m')))
     else:
         cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
             VALUES ("{}", "{}", {}, {}, NULL, "{}")'.format(acct, desc, credit, amount, recorded_on))
