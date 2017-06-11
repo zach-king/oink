@@ -18,6 +18,10 @@ REPORT_WIDTH = 100
 def generate_text_report(acct_no, acct_name, filepath):
     '''Generates a .TXT budgeting report'''
 
+    # Append .txt to filepath if not there already
+    if not filepath.lower().endswith('.txt'):
+        filepath += '.txt'
+
     locale.setlocale(locale.LC_ALL, '')
 
     with open(filepath, 'w') as fout:
