@@ -11,7 +11,7 @@ import locale
 from tabulate import tabulate
 
 from . import db, accounts, budget
-from .colorize import color_error, color_info, color_input, color_success, colorize_headers, colorize
+from .colorize import color_error, color_info, color_input, color_success, colorize_headers, colorize, colorize_list
 
 
 def setup():
@@ -153,10 +153,10 @@ def list_all_transactions(num=10):
     for row in rows:
         str_amount = ''
         if row[3] == 1: # Credit
-            str_amount = '-' + str(locale.currency(row[4], grouping=True))
+            str_amount = colorize('-' + locale.currency(row[4], grouping=True), 'red')
         else:
-            str_amount = '+' + str(locale.currency(row[4], grouping=True))
-        new_rows.append(row[:3] + (str_amount,) + row[5:])
+            str_amount = colorize('+' + locale.currency(row[4], grouping=True), 'green')
+        new_rows.append(colorize_list(row[:3], ['gray', 'cyan', 'yellow']) + [str_amount,] + colorize_list(row[5:], ['purple', 'yellow']))
 
     headers = colorize_headers([
         'Transaction #', 'Account', 'Description',
@@ -192,10 +192,10 @@ def list_transactions(acct=None, num=10):
     for row in rows:
         str_amount = ''
         if row[3] == 1: # Credit
-            str_amount = '-' + str(locale.currency(row[4], grouping=True))
+            str_amount = colorize('-' + locale.currency(row[4], grouping=True), 'red')
         else:
-            str_amount = '+' + str(locale.currency(row[4], grouping=True))
-        new_rows.append(row[:3] + (str_amount,) + row[5:])
+            str_amount = colorize('+' + locale.currency(row[4], grouping=True), 'green')
+        new_rows.append(colorize_list(row[:3], ['gray', 'cyan', 'yellow']) + [str_amount,] + colorize_list(row[5:], ['purple', 'yellow']))
 
     headers = colorize_headers([
         'Transaction #', 'Account', 'Description',

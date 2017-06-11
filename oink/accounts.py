@@ -13,7 +13,7 @@ import locale
 from tabulate import tabulate
 
 from . import db
-from .colorize import colorize, colorize_headers
+from .colorize import colorize, colorize_headers, colorize_list
 from .colorize import color_input, color_error, color_info, color_success
 
 
@@ -44,7 +44,12 @@ def list_accounts():
     new_rows = []
 
     for acct in rows:
-        new_rows.append(acct[:2] + (locale.currency(acct[2], grouping=True),) + acct[3:])
+        balance = acct[2]
+        if balance < 0:
+            balance = colorize('-' + locale.currency(-1 * balance, grouping=True), 'red')
+        else:
+            balance = colorize(locale.currency(balance, grouping=True), 'green')
+        new_rows.append(colorize_list(acct[:2], ['gray', 'cyan']) + [balance,] + colorize_list(acct[3:], ['yellow']))
     headers = colorize_headers(['Account No.', 'Name', 'Balance', 'Created At'])
     print(tabulate(new_rows, headers=headers, tablefmt='psql'))
 

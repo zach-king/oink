@@ -9,7 +9,7 @@ import locale
 from tabulate import tabulate
 
 from . import db
-from .colorize import color_error, color_info, color_input, color_success, colorize_headers, colorize
+from .colorize import color_error, color_info, color_input, color_success, colorize_headers, colorize, colorize_list
 
 
 def setup():
@@ -198,10 +198,11 @@ def list_budget(month=None, year=None):
             else:
                 result += transaction[1]
         if result > 0: # Good; means budget has not run out
-            result = colorize('+' + str(locale.currency(result, grouping=True)), 'green')
+            result = colorize('+' + locale.currency(result, grouping=True), 'green')
         else:
-            result = colorize('-' + str(locale.currency(-1 * result, grouping=True)), 'red')
-        rows.append([budget[0], budget[2], budget[1], result])
+            result = colorize('-' + locale.currency(-1 * result, grouping=True), 'red')
+        lyst = [budget[0], budget[2], locale.currency(budget[1], grouping=True)]
+        rows.append(colorize_list(lyst[:3], ['purple', 'cyan', 'yellow']) + [result,])
 
     headers = colorize_headers(['Category', 'Account', 'Budget', 'Balance'])
     print(tabulate(rows, headers=headers, tablefmt='psql'))
