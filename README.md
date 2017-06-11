@@ -3,8 +3,17 @@
 A CLI budgeting tool for nerds. Uses a sqlite3 db stored in the folder of your
 choice (hint: Dropbox).
 
-Currently only supports Python 3.x. I plan to add support for 2.7 after initial
-concept is complete.
+Currently only supports Python 3.x.
+
+## Installation
+
+To install *Oink* simply run the following from the same directory as the `setup.py` file:  
+
+```
+python setup.py install
+```
+
+Now you can launch *Oink* from anywhere via the command-line with the `oink` command.
 
  
 ## Commands
