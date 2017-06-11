@@ -195,6 +195,8 @@ def list_budget(month=None, year=None):
         for transaction in trans_cur.execute(transaction_query):
             if transaction[0] == 1:
                 result -= transaction[1]
+            else:
+                result += transaction[1]
         if result > 0: # Good; means budget has not run out
             result = colorize('+' + str(locale.currency(result, grouping=True)), 'green')
         else:
