@@ -85,6 +85,8 @@ def generate_html_report(acct_no, acct_name, filepath):
             for transaction in trans_cur.execute(transaction_query):
                 if transaction[0] == 1:
                     result -= transaction[1]
+                else:
+                    result += transaction[1]
             if result > 0: # Good; means budget has not run out
                 result = '+' + locale.currency(result, grouping=True)
             else:

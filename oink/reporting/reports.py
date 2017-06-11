@@ -33,6 +33,9 @@ def report(acct, path, fmt='txt'):
         print(colorize.color_error('[error]') + ' Unsupported report format `{}`'.format(fmt))
         print('Supported formats are ' + ', '.join([f.upper() for f in VALID_FORMATS]))
         return
+    
+    if not path.lower().endswith(fmt):
+        path += '.' + fmt.lower()
 
     dirpath, filepath = os.path.split(path)
     if dirpath == '': # File in same directory
@@ -69,8 +72,9 @@ def report(acct, path, fmt='txt'):
     elif fmt == 'pdf':
         _report_pdf(acct_id, acct, path)
     else:
-        print('Unable to generate report')
+        print(colorize.color_error('[error]') + ' Unable to generate report')
         return
+    print(colorize.color_success('Report generated and saved to `{}`'.format(path)))
 
 
 def _report_txt(acct_id, acct_name, path):
