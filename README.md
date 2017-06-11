@@ -57,6 +57,5 @@ __Reports__
 - Write unit tests for transactions
 - Add tab completion to command input
 - Implement CSV report generation
-- Implement HTML report generation
 - Implement PDF report generation
 - Refactor budget table to have a PK of (name, account, month) to support same-name categories for different accounts
