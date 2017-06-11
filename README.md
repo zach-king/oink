@@ -39,9 +39,7 @@ __Transactions__
 
 __Reports__
 
-TODO
-
-- `rep <account> <file> [format]` - Generate a report in the specified format, and save it to a file. Should support formats TXT, CSV, and PDF.
+- `rep <account> <file> [format]` - Generate a report in the specified format, and save it to a file. Currently only supports TXT. Formats CSV, HTML, and PDF coming very soon.
 
 
 ## TODO
@@ -49,3 +47,7 @@ TODO
 - Write unit tests for budget
 - Write unit tests for transactions
 - Add tab completion to command input
+- Implement CSV report generation
+- Implement HTML report generation
+- Implement PDF report generation
+- Refactor budget table to have a PK of (name, account, month) to support same-name categories for different accounts
