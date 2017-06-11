@@ -144,7 +144,7 @@ def list_all_transactions(num=10):
     cur = db.cursor()
     cur.execute(
         'SELECT trans_id, acct, description, credit, amount, \
-        budget_category, recorded_on FROM transactions ORDER BY recorded_on DESC \
+        budget_category, recorded_on FROM transactions ORDER BY recorded_on DESC, trans_id DESC \
         {}'.format(limit_inject))
     rows = cur.fetchall()
 
@@ -184,7 +184,7 @@ def list_transactions(acct=None, num=10):
     cur.execute(
         'SELECT trans_id, acct, description, credit, amount, budget_category, \
         recorded_on FROM transactions WHERE acct = "{}" ORDER BY recorded_on \
-        DESC {}'.format(acct, limit_inject))
+        DESC, trans_id DESC {}'.format(acct, limit_inject))
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
