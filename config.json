@@ -1,0 +1,12 @@
+{
+    "databasePath": "/home/zach/Dropbox/Budgeting/",
+    "colorscheme": {
+        "headers": "blue",
+        "error": "red",
+        "input": "cyan",
+        "success": "green",
+        "info": "blue",
+        "default": "white",
+        "warning": "yellow"
+    }
+}

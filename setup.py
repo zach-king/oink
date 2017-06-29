@@ -1,14 +1,14 @@
 from setuptools import setup
 
 setup(name='oink',
-      version='0.1.0',
+      version='0.2.0',
       description='A CLI budgeting tools for nerds.',
-      url='http://github.com/geekforbrains/oink',
-      author='Gavin Vickery',
-      author_email='gavin@geekforbrains.com',
+      url='http://github.com/zach-king/oink',
+      author='Zachary King',
+      author_email='kingzach77@gmail.com',
       entry_points = {
         'console_scripts': ['oink=oink.main:init'],
       },
       license='MIT',
-      packages=['oink'],
+      packages=['oink', 'oink.reporting'],
       zip_safe=False)
