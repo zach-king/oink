@@ -12,13 +12,13 @@ from .reporting import reports
 
 
 TITLE = r'''
- $$$$$$\  $$\           $$\       
-$$  __$$\ \__|          $$ |      
-$$ /  $$ |$$\ $$$$$$$\  $$ |  $$\ 
+ $$$$$$\  $$\           $$\
+$$  __$$\ \__|          $$ |
+$$ /  $$ |$$\ $$$$$$$\  $$ |  $$\
 $$ |  $$ |$$ |$$  __$$\ $$ | $$  |
-$$ |  $$ |$$ |$$ |  $$ |$$$$$$  / 
-$$ |  $$ |$$ |$$ |  $$ |$$  _$$<  
- $$$$$$  |$$ |$$ |  $$ |$$ | \$$\ 
+$$ |  $$ |$$ |$$ |  $$ |$$$$$$  /
+$$ |  $$ |$$ |$$ |  $$ |$$  _$$<
+ $$$$$$  |$$ |$$ |  $$ |$$ | \$$\
  \______/ \__|\__|  \__|\__|  \__|
  '''
 
@@ -29,7 +29,6 @@ def main():
 
     '''
     installation_path = get_installation_path()
-    colorize.load_color_scheme()
     db.connect(installation_path)
 
     # Setup the tables for the database
@@ -122,11 +121,11 @@ def get_installation_path():
     path the the oink.db file.
 
     '''
-    if not os.path.exists(os.path.join(os.path.expanduser('~'), '.oink')):
-        os.mkdir(os.path.join(os.path.expanduser('~'), '.oink'))
-
     config_dir = os.path.join(os.path.expanduser('~'), '.oink')
     config_path = os.path.join(config_dir, 'config.json')
+
+    setup_config()
+    colorize.load_color_scheme()
 
     if os.path.isfile(config_path):
         with open(config_path, 'r') as fin:
@@ -137,7 +136,7 @@ def get_installation_path():
             else:
                 while True:
                     print('Where would you like Oink to save its data?')
-                    path = input('> ')
+                    path = os.path.expanduser(input('> '))
                     if not os.path.isdir(path):
                         print(colorize.color_error('[error]') + ' That path doesn\'t exist.')
                         print('Please enter the full path to an existing folder.')
@@ -164,3 +163,33 @@ def get_installation_path():
             }
             json.dump(default_config, fout, indent=4)
         return get_installation_path()
+
+
+def setup_config():
+    """
+    If the ~/.oink/ config directory has not been created
+    yet, create it and create the default JSON config file in it
+    """
+    # Create the ~/.oink/ directory if it does not exist
+    config_dir = os.path.join(os.path.expanduser('~'), '.oink')
+    if not os.path.exists(config_dir):
+        os.mkdir(config_dir)
+
+    config_path = os.path.join(config_dir, 'config.json')
+
+    # If the config file does not exist, create it with the defaults
+    if not os.path.isfile(config_path):
+        with open(config_path, 'w') as fout:
+            default_config = {
+                "colorscheme": {
+                    "info": "blue",
+                    "error": "red",
+                    "success": "green",
+                    "warning": "yellow",
+                    "input": "cyan",
+                    "headers": "blue",
+                    "default": "white"
+                },
+                "databasePath": ""
+            }
+            json.dump(default_config, fout, indent=4)
