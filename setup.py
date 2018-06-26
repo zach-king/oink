@@ -11,4 +11,8 @@ setup(name='oink',
       },
       license='MIT',
       packages=['oink', 'oink.reporting'],
+      install_requires=[
+        'click',
+        'tabulate',
+      ],
       zip_safe=False)
