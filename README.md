@@ -15,7 +15,7 @@ python setup.py install
 
 Now you can launch *Oink* from anywhere via the command-line with the `oink` command.
 
- 
+
 ## Commands
 
 Type `?` at any time to see the current sections available commands.
@@ -59,3 +59,4 @@ __Reports__
 - Implement CSV report generation
 - Implement PDF report generation
 - Refactor budget table to have a PK of (name, account, month) to support same-name categories for different accounts
+- Add support for native command history (up/down arrow keys; Ctrl+P/Ctrl+N)
