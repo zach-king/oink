@@ -7,6 +7,11 @@ import os
 import sys
 import json
 
+try:
+    import readline
+except:
+    pass # possibility a user's build of python does not include readline
+
 from . import accounts, db, router, transactions, budget, colorize
 from .reporting import reports
 

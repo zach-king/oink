@@ -59,4 +59,3 @@ __Reports__
 - Implement CSV report generation
 - Implement PDF report generation
 - Refactor budget table to have a PK of (name, account, month) to support same-name categories for different accounts
-- Add support for native command history (up/down arrow keys; Ctrl+P/Ctrl+N)
