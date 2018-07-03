@@ -11,7 +11,7 @@ commands = []
 
 # The number of padding between commands and help text
 # This is determined by keeping track of the longest command string
-print_padding = 0 
+print_padding = 0
 
 
 def register(command, help_text, handler):
@@ -98,6 +98,9 @@ def route(command):
 
     if cur_arg != '':
         args.append(cur_arg)
+
+    while '' in args:
+        args.remove('')
 
     # Try to find and execute the command
     for comm in commands:

@@ -12,7 +12,7 @@ try:
 except:
     pass # possibility a user's build of python does not include readline
 
-from . import accounts, db, router, transactions, budget, colorize
+from . import accounts, db, router, transactions, budget, colorize, category
 from .reporting import reports
 
 
@@ -38,6 +38,7 @@ def main():
 
     # Setup the tables for the database
     accounts.setup()
+    category.setup()
     transactions.setup()
     budget.setup()
 
@@ -72,6 +73,14 @@ def register_commands():
         'transaction between two accounts', transactions.add_transfer)
     router.register('et <id>', 'Edit a transaction', transactions.edit_transaction)
     router.register('dt <id>', 'Delete a transaction', transactions.delete_transaction)
+    router.register('separator', None, None)
+
+    # Category commands
+    router.register('header', 'Categories', None)
+    router.register('lc', 'List categories', category.list_all)
+    router.register('ac <name>', 'Add new category', category.new)
+    router.register('rc <name> <new_name>', 'Rename a category', category.rename)
+    router.register('dc <id>', 'Delete a category and all its transactions', category.remove)
     router.register('separator', None, None)
 
     # Budget commands
