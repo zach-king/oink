@@ -59,7 +59,7 @@ def register_commands():
     router.register('la', 'List bank accounts', accounts.list_accounts)
     router.register('aa', 'Add bank account', accounts.add)
     router.register('ra', 'Rename bank account', accounts.rename)
-    router.register('da <name>', 'Delete bank account', accounts.delete)
+    router.register('da <id>', 'Delete bank account', accounts.delete)
     router.register('separator', None, None)
 
     # Transaction commands

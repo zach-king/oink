@@ -1,3 +1,2 @@
 click==6.4
--e git+git@github.com:geekforbrains/oink@c0627469b24a9b6ab9038f4ad370ee50176580fd#egg=oink-master
 tabulate==0.7.5
