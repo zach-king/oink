@@ -138,3 +138,12 @@ def exists(name):
     `False` otherwise.
     """
     return db.cursor().execute('SELECT COUNT(*) FROM categories WHERE name = ?', (name,)).fetchone()[0] != 0
+
+
+def print_list():
+    """
+    Prints out the available categories
+    """
+    cats = db.cursor().execute('SELECT id, name FROM categories ORDER BY id').fetchall()
+    headers = colorize_headers(['ID', 'Name'])
+    print(tabulate(cats, headers=headers, tablefmt='psql'))

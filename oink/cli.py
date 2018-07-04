@@ -65,11 +65,11 @@ def register_commands():
 
     # Transaction commands
     router.register('header', 'Transaction', None)
-    router.register('at', 'Record a new transaction', transactions.record_transaction)
+    router.register('at', 'Record a new transaction', transactions.new)
     router.register('lt [account] [num]', 'List transactions for an account; ' + \
         'defaults to all accounts and 10 transactions. ' + \
         'Use * to specify all.', transactions.list_transactions)
-    router.register('ar [source] [dest] [amount]', 'Record a transfer ' + \
+    router.register('ar <amount> <source_account> <destination_account>', 'Record a transfer ' + \
         'transaction between two accounts', transactions.add_transfer)
     router.register('et <id>', 'Edit a transaction', transactions.edit_transaction)
     router.register('dt <id>', 'Delete a transaction', transactions.delete_transaction)

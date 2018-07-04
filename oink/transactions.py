@@ -1,6 +1,6 @@
-'''
+"""
 File: transactions.py
-'''
+"""
 
 from __future__ import print_function
 import re
@@ -10,85 +10,139 @@ import locale
 # 3rd-Party module for tabular console output
 from tabulate import tabulate
 
-from . import db, accounts, budget
+from . import db, accounts, budget, category, utils
 from .colorize import color_error, color_info, color_input, color_success, colorize_headers, colorize, colorize_list
 
 
+DEPOSIT_ID = 0
+WITHDRAWAL_ID = 1
+
+
 def setup():
-    '''
+    """
     Initial database setup; creates the `transactions` table
-    '''
+    """
+    global WITHDRAWAL_ID, DEPOSIT_ID
+
     locale.setlocale(locale.LC_ALL, '')
     cur = db.cursor()
+
+    # Create transaction_types table
+    cur.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS transaction_types (
+            id integer PRIMARY KEY AUTOINCREMENT,
+            name text NOT NULL,
+            UNIQUE(name)
+        );
+        '''
+    )
+    db.commit()
+
+    # Insert the default transaction types
+    cur.execute(f'''
+        INSERT INTO transaction_types (id, name)
+        SELECT {DEPOSIT_ID}, 'deposit'
+        WHERE NOT EXISTS(SELECT 1 FROM transaction_types WHERE id = {DEPOSIT_ID} AND name = 'deposit');
+        ''')
+    cur.execute(f'''
+        INSERT INTO transaction_types (id, name)
+        SELECT {WITHDRAWAL_ID}, 'withdrawal'
+        WHERE NOT EXISTS(SELECT 1 FROM transaction_types WHERE id = {WITHDRAWAL_ID} AND name = 'withdrawal');
+        ''')
+    db.commit()
+
+    # Create transactions table
     cur.execute(
         '''
         CREATE TABLE IF NOT EXISTS transactions (
-            trans_id integer PRIMARY KEY AUTOINCREMENT,
-            acct text NOT NULL,
-            description text NOT NULL,
-            credit integer NOT NULL,
+            id integer PRIMARY KEY AUTOINCREMENT,
+            account_id integer NOT NULL,
+            transaction_type_id integer NOT NULL,
+            description text,
             amount integer NOT NULL,
-            budget_category text,
-            budget_month text,
-            recorded_on text NOT NULL,
-            FOREIGN KEY (acct)
-                REFERENCES accounts (name)
+            category_id integer,
+            created_at text NOT NULL,
+            FOREIGN KEY (account_id)
+                REFERENCES accounts (id)
                 ON UPDATE CASCADE
-                ON DELETE CASCADE,
-            FOREIGN KEY (budget_category, budget_month)
-                REFERENCES budget_categories (category_name, month)
+                ON DELETE NO ACTION,
+            FOREIGN KEY (transaction_type_id)
+                REFERENCES transaction_types (id)
                 ON UPDATE CASCADE
-                ON DELETE CASCADE
+                ON DELETE NO ACTION,
+            FOREIGN KEY (category_id)
+                REFERENCES categories (id)
+                ON UPDATE CASCADE
+                ON DELETE NO ACTION
         );
         ''')
     db.commit()
 
-def _add_transaction(acct, desc, credit, amount, category):
-    '''Helper function for adding a transaction'''
+def create(account_id, description, type_id, amount, category_id=None):
+    """
+    Helper function for adding a transaction
+    """
     cur = db.cursor()
-    recorded_on = datetime.now().strftime('%Y-%m-%d')
-    if category not in ('', 'null', 'NULL', None):
-        cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on, budget_month) \
-            VALUES ("{}", "{}", {}, {}, "{}", "{}", "{}")'.format(acct, desc, credit, amount, category, recorded_on, datetime.now().strftime('%Y-%m')))
-    else:
-        cur.execute('INSERT INTO transactions(acct, description, credit, amount, budget_category, recorded_on) \
-            VALUES ("{}", "{}", {}, {}, NULL, "{}")'.format(acct, desc, credit, amount, recorded_on))
+    created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # Insert the transaction record
+    cur.execute('INSERT INTO transactions (account_id, transaction_type_id, description, amount, category_id, created_at) \
+        VALUES (?, ?, ?, ?, ?, ?)', (account_id, type_id, description, amount, category_id, created_at))
 
     if cur.rowcount == 0:
         print(color_error('[error]') + ' Failed to record transaction.')
         return
 
     # Now withdraw or deposit from the account as recorded
-    prev_balance = accounts.get_balance(acct)
+    prev_balance = accounts.get_balance(account_id)
     new_balance = 0
-    if credit == 1:
+    if type_id == WITHDRAWAL_ID:
         new_balance = prev_balance - amount
-    else:
+    elif type_id == DEPOSIT_ID:
         new_balance = prev_balance + amount
+    else:
+        print(color_warning(f'Unexpected transaction type "{type_id}" received. Account balance will not be affected.'))
+        return True
 
     # Set the new balance
-    success = accounts.set_balance(acct, new_balance)
+    success = accounts.set_balance(account_id, new_balance)
 
     return success
 
-def record_transaction():
-    '''
-    Handler to record a new transaction in a given account
-    '''
-    while True:
-        name = input(color_input('Account Name: '))
 
-        if len(name) <= 0:
+def list_transaction_types():
+    """
+    Prints out the available transaction types
+    """
+    types = db.cursor().execute('SELECT id, name FROM transaction_types ORDER BY id').fetchall()
+    headers = colorize_headers(['ID', 'Name'])
+    print(tabulate(types, headers=headers, tablefmt='psql'))
+
+
+def type_exists(type_id):
+    """
+    Whether or not a type by `type_id` exists
+    """
+    return db.cursor().execute('SELECT COUNT(*) FROM transaction_types WHERE id = ?', (type_id,)).fetchone()[0] != 0
+
+
+def new():
+    """
+    Handler to record a new transaction in a given account
+    """
+    while True:
+        account_id = input(color_input('Account ID: '))
+
+        if len(account_id) <= 0:
             print(color_info('Record transaction cancelled.'))
             return
 
+        account_id = int(account_id)
         cur = db.cursor()
-        cur.execute('SELECT COUNT(*) FROM accounts WHERE name = ?', (name,))
-        result = cur.fetchone()
-        count = result[0]
 
-        if count <= 0:
-            print(color_error('[error]') + ' Sorry, no account was found under the name `{}`.'.format(name))
+        if not accounts.exists(int(account_id)):
+            print(color_error('[error]') + ' No account was found with ID `{}`.'.format(account_id))
             continue
 
         description = input(color_input('Transaction description: '))
@@ -96,16 +150,15 @@ def record_transaction():
             print(color_info('Record transaction cancelled.'))
             return
 
-        credit = input(color_input('Credit (withdrawal) or Debit (deposit)? (C/D): '))
-        if len(credit) <= 0:
+        print('')
+        list_transaction_types()  # Prints out available transaction types
+        _type = input(color_input('\nSelect a transaction type (ID): '))
+        if len(_type) <= 0:
             print(color_info('Record transaction cancelled.'))
             return
-        if credit.lower() == 'c':
-            credit = 1
-        elif credit.lower() == 'd':
-            credit = 0
-        else:
-            print(color_error('[error]') + ' Incorrect entry for credit/debit.')
+        _type = int(_type)
+        if not type_exists(_type):
+            print(color_error('[error]') + ' Invalid type ID selected.')
             continue
 
         amount = input(color_input('Transaction amount: '))
@@ -114,17 +167,19 @@ def record_transaction():
             return
         amount = float(re.sub(r'[^0-9\.]', '', amount))
 
-        category = input(color_input('Budget category: '))
-        if category.lower() in ('', 'none', 'null', 'n/a'):
-            category = 'NULL'
+        print('')
+        category.print_list()  # Prints out available categories
+        category_id = input(color_input('Category ID: '))
+        if category_id.lower() in ('', 'none', 'null', 'n/a'):
+            category_id = None
         else:
-            cur.execute('SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(category))
-            if cur.fetchone()[0] == 0:
-                print(color_error('[error]') + ' No budget category was found under the name `{}`'.format(category))
+            category_id = int(category_id)
+            if not category.get(category_id):
+                print(color_error('[error]') + ' No category was found under the ID `{}`'.format(category_id))
                 continue
 
         # Call the helper function
-        success = _add_transaction(name, description, credit, amount, category)
+        success = create(account_id, description, _type, utils.float_to_atomic(amount), category_id)
         if success:
             db.commit()
             print(color_success('Transaction recorded'))
@@ -134,97 +189,108 @@ def record_transaction():
         return
 
 def list_all_transactions(num=10):
-    '''
+    """
     Handler to list transactions for all accounts
-    '''
-    limit_inject = ''
-    if num not in (None, '*'):
-        limit_inject = 'LIMIT ' + str(num)
+    """
+    if num in (None, '*'):
+        num = -1
 
     cur = db.cursor()
     cur.execute(
-        'SELECT trans_id, acct, description, credit, amount, \
-        budget_category, recorded_on FROM transactions ORDER BY recorded_on DESC, trans_id DESC \
-        {}'.format(limit_inject))
+        'SELECT transactions.id, account.name, transactions.description, type.id, type.name, transactions.amount, \
+        category.name, transactions.created_at FROM transactions \
+        LEFT JOIN accounts account ON transactions.account_id = account.id \
+        LEFT JOIN transaction_types type ON transactions.transaction_type_id = type.id \
+        LEFT JOIN categories category ON transactions.category_id = category.id \
+        ORDER BY transactions.created_at DESC, transactions.id DESC \
+        LIMIT ?', (num,))
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
     new_rows = []
     for row in rows:
+        amount = utils.atomic_to_float(row[5])
         str_amount = ''
-        if row[3] == 1: # Credit
-            str_amount = colorize('-' + locale.currency(row[4], grouping=True), 'red')
+        if row[3] == WITHDRAWAL_ID: # Credit
+            str_amount = colorize('-' + locale.currency(amount, grouping=True), 'red')
+        elif row[3] == DEPOSIT_ID:
+            str_amount = colorize('+' + locale.currency(amount, grouping=True), 'green')
         else:
-            str_amount = colorize('+' + locale.currency(row[4], grouping=True), 'green')
-        new_rows.append(colorize_list(row[:3], ['gray', 'cyan', 'yellow']) + [str_amount,] + colorize_list(row[5:], ['purple', 'yellow']))
+            str_amount = colorize(' ' + locale.currency(amount, grouping=True), 'yellow')
+        new_rows.append(colorize_list(row[:3], ['white', 'cyan', 'yellow']) + [colorize(row[4], 'white'), str_amount,] + colorize_list(row[6:], ['purple', 'white']))
 
     headers = colorize_headers([
-        'Transaction #', 'Account', 'Description',
-        'Amount', 'Category', 'Recorded On'])
+        'ID', 'Account', 'Description', 'Type',
+        'Amount', 'Category', 'Created At'])
     print(tabulate(new_rows, headers=headers, tablefmt='psql'))
 
-def list_transactions(acct=None, num=10):
-    '''
+def list_transactions(account_id=None, num=10):
+    """
     Handler to list transactions for a given account.
-    '''
-    if acct in (None, '*'):
+    """
+    if account_id in (None, '*'):
         list_all_transactions(num)
         return
 
-    limit_inject = ''
-    if num not in (None, '*'):
-        limit_inject = 'LIMIT ' + str(num)
+    if num in (None, '*'):
+        num = -1
 
     cur = db.cursor()
-    cur.execute('SELECT * FROM accounts WHERE name = "{}"'.format(acct))
-    if cur.rowcount == 0:
-        print(color_error('[error]') + ' No account was found by the name `{}`'.format(acct))
+
+    if not accounts.exists(account_id):
+        print(color_error('[error]') + ' No account was found by the ID `{}`'.format(acct))
         return
 
     cur.execute(
-        'SELECT trans_id, acct, description, credit, amount, budget_category, \
-        recorded_on FROM transactions WHERE acct = "{}" ORDER BY recorded_on \
-        DESC, trans_id DESC {}'.format(acct, limit_inject))
+        'SELECT transactions.id, account.name, transactions.description, type.id, type.name, transactions.amount, \
+        category.name, transactions.created_at FROM transactions \
+        LEFT JOIN accounts account ON transactions.account_id = account.id \
+        LEFT JOIN transaction_types type ON transactions.transaction_type_id = type.id \
+        LEFT JOIN categories category ON transactions.category_id = category.id \
+        ORDER BY transactions.created_at DESC, transactions.id DESC \
+        LIMIT ?', (num,))
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
     new_rows = []
     for row in rows:
+        amount = utils.atomic_to_float(row[5])
         str_amount = ''
-        if row[3] == 1: # Credit
-            str_amount = colorize('-' + locale.currency(row[4], grouping=True), 'red')
+        if row[3] == WITHDRAWAL_ID: # Credit
+            str_amount = colorize('-' + locale.currency(amount, grouping=True), 'red')
+        elif row[3] == DEPOSIT_ID:
+            str_amount = colorize('+' + locale.currency(amount, grouping=True), 'green')
         else:
-            str_amount = colorize('+' + locale.currency(row[4], grouping=True), 'green')
-        new_rows.append(colorize_list(row[:3], ['gray', 'cyan', 'yellow']) + [str_amount,] + colorize_list(row[5:], ['purple', 'yellow']))
+            str_amount = colorize(' ' + locale.currency(amount, grouping=True), 'yellow')
+        new_rows.append(colorize_list(row[:3], ['white', 'cyan', 'yellow']) + [colorize(row[4], 'white'), str_amount,] + colorize_list(row[6:], ['purple', 'white']))
 
     headers = colorize_headers([
-        'Transaction #', 'Account', 'Description',
-        'Amount', 'Category', 'Recorded On'
-    ])
+        'ID', 'Account', 'Description', 'Type',
+        'Amount', 'Category', 'Created At'])
     print(tabulate(new_rows, headers=headers, tablefmt='psql'))
 
 
-def add_transfer(source_acct=None, dest_acct=None, amount=None):
-    '''Handler for adding a transfer transaction between two accounts'''
+def add_transfer(amount, source_acct_id, dest_acct_id):
+    """
+    Handler for adding a transfer transaction between two accounts
+    """
     # Check for optargs and validate data
     cur = db.cursor()
-    accts = [acct[0] for acct in cur.execute('SELECT name FROM accounts')]
-    if source_acct is None:
-        source_acct = input(color_input('Source account name: '))
-    if source_acct == '':
+    source_acct_id = int(source_acct_id)
+    dest_acct_id = int(dest_acct_id)
+    accts = [acct[0] for acct in cur.execute('SELECT id FROM accounts')]
+    if source_acct_id in (None, ''):
         print(color_info('Transfer transaction cancelled.'))
         return
-    if source_acct not in accts:
-        print(color_error('[error]') + ' The source account `{}` does not exist.'.format(source_acct))
+    if source_acct_id not in accts:
+        print(color_error('[error]') + ' The source account (ID: {}) does not exist.'.format(source_acct_id))
         return
 
-    if dest_acct is None:
-        dest_acct = input(color_input('Destination account name: '))
-    if dest_acct == '':
+    if dest_acct_id in (None, ''):
         print(color_info('Transfer transaction cancelled.'))
         return
-    if dest_acct not in accts:
-        print(color_error('[error]') + ' The destination account `{}` does not exist.'.format(dest_acct))
+    if dest_acct_id not in accts:
+        print(color_error('[error]') + ' The destination account (ID: {}) does not exist.'.format(dest_acct_id))
         return
 
     if amount is None:
@@ -239,23 +305,27 @@ def add_transfer(source_acct=None, dest_acct=None, amount=None):
             print(color_error('[error]') + ' The amount must be greater than zero!')
             return
 
+    amount = utils.float_to_atomic(amount)
+
     # Make the two transactions on the accounts
-    success = _add_transaction(source_acct, 'Transfer to `{}`'.format(dest_acct), 1, amount, None)
-    success = success and _add_transaction(dest_acct, 'Transfer from `{}`'.format(source_acct), 0, amount, None)
+    success = create(source_acct_id, 'Transfer to Account ID {}'.format(dest_acct_id), WITHDRAWAL_ID, amount, None)
+    success = success and create(dest_acct_id, 'Transfer from Account ID {}'.format(source_acct_id), DEPOSIT_ID, amount, None)
 
     if success:
-        print(color_success('Transfer from `{}` to `{}` recorded.'.format(source_acct, dest_acct)))
+        print(color_success('Transfer from account {} to {} recorded.'.format(source_acct_id, dest_acct_id)))
         db.commit()
         return
 
-    print(color_error('[error]') + ' Failed to record transfer transaction from `{}` to `{}`.'.format(source_acct, dest_acct))
+    print(color_error('[error]') + ' Failed to record transfer transaction from account {} to {}.'.format(source_acct_id, dest_acct_id))
 
 
 def delete_transaction(trans_id):
-    '''Handler for the delete a transaction command'''
+    """
+    Handler for the delete a transaction command
+    """
     # Validate the transaction id
     cur = db.cursor()
-    if trans_id == '' or trans_id is None:
+    if trans_id in (None, ''):
         print(color_info('Delete transaction cancelled.'))
         return
 
@@ -265,25 +335,26 @@ def delete_transaction(trans_id):
         print(color_error('[error]') + ' Transaction ID must be an integer!')
         return
 
-    rows = cur.execute('SELECT COUNT(*) FROM transactions WHERE trans_id = {}'.format(trans_id)).fetchone()
-    if rows[0] != 1:
+    exists = cur.execute('SELECT COUNT(*) FROM transactions WHERE id = ?', (trans_id,)).fetchone()[0] == 1
+    if not exists:
         print(color_error('[error]') + ' No transaction was found with ID `{}`'.format(trans_id))
         return
 
     # Counter the transaction effect
-    transaction = cur.execute('SELECT acct, credit, amount, budget_category FROM transactions \
-        WHERE trans_id = {}'.format(trans_id)).fetchone()
-    account = transaction[0]
+    transaction = cur.execute('SELECT account_id, transaction_type_id, amount FROM transactions \
+        WHERE id = ?', (trans_id,)).fetchone()
+    account_id = transaction[0]
+    type_id = transaction[1]
     amount = transaction[2]
-    amount *= -1 if transaction[1] == 0 else 1
-    category = transaction[3]
+    if type_id == DEPOSIT_ID:
+        amount *= -1
 
     # Update the balance of the account
-    accounts.set_balance(account, accounts.get_balance(account) + amount)
+    accounts.set_balance(account_id, accounts.get_balance(account_id) + amount)
 
     # Valid and exists so delete
-    cur.execute('DELETE FROM transactions WHERE trans_id = {}'.format(trans_id))
-    if cur.execute('SELECT COUNT(*) FROM transactions WHERE trans_id = {}'.format(trans_id)).fetchone()[0] != 0:
+    cur.execute('DELETE FROM transactions WHERE id = ?', (trans_id,))
+    if cur.execute('SELECT COUNT(*) FROM transactions WHERE id = ?', (trans_id,)).fetchone()[0] != 0:
         print(color_error('[error]') + ' Failed to delete transaction.')
         return
 
@@ -291,54 +362,53 @@ def delete_transaction(trans_id):
     db.commit()
 
 
-def _edit_transaction(trans_id, description=None, credit=None, amount=None, budget_category=None):
-    '''Helper function for updating a transaction record'''
+def _edit_transaction(trans_id, description=None, type_id=None, amount=None, category_id=None):
+    """
+    Helper function for updating a transaction record
+    """
     cur = db.cursor()
     # Get current record
-    transaction = cur.execute('SELECT description, credit, amount, budget_category FROM \
-        transactions WHERE trans_id = {}'.format(trans_id)).fetchone()
+    transaction = cur.execute('SELECT description, transaction_type_id, amount, category_id FROM \
+        transactions WHERE id = ?', (trans_id,)).fetchone()
+
+    if cur.rowcount == 0:
+        print(color_error('[error]') + ' Transaction not found.')
+        return False
 
     if description is None:
         description = transaction[0]
-    if credit is None:
-        credit = transaction[1]
+    if type_id is None:
+        type_id = transaction[1]
     if amount is None:
         amount = transaction[2]
-    if budget_category is None:
-        budget_category = transaction[3]
+    if category_id is None:
+        category_id = transaction[3]
 
     # Update where different
-    if budget_category is not None:
-        cur.execute('UPDATE transactions SET description = "{}", credit = {}, \
-            amount = {}, budget_category = "{}" WHERE trans_id = {}'.format(
-                description, credit, amount, budget_category, trans_id
-            ))
-    else:
-        cur.execute('UPDATE transactions SET description = "{}", credit = {}, \
-            amount = {}, budget_category = NULL WHERE trans_id = {}'.format(
-                description, credit, amount, trans_id))
+    cur.execute('UPDATE transactions SET description = ?, transaction_type_id = ?, \
+        amount = ?, category_id = ? WHERE id = ?', (
+            description, type_id, amount, category_id, trans_id,
+        ))
 
     if cur.rowcount != 1:
         return False
 
     # Check for change of credit in case need balance update
     success = True
-    if credit != transaction[1]:
-        acct = cur.execute('SELECT acct FROM transactions WHERE trans_id = {}'.format(trans_id)).fetchone()[0]
-        if str(credit) == '1':
-            # Need to subtract the amount from the account
-            success = accounts.set_balance(acct, accounts.get_balance(acct) - (transaction[2] + amount))
-        elif str(credit) == '0':
-            # Need to add the amount to the account
-            success = accounts.set_balance(acct, accounts.get_balance(acct) + (transaction[2] + amount))
-    elif amount != transaction[2]:
-        acct = cur.execute('SELECT acct FROM transactions WHERE trans_id = {}'.format(trans_id)).fetchone()[0]
-        if str(credit) == '1':
-            # Need to subtract the amount from the account
-            success = accounts.set_balance(acct, accounts.get_balance(acct) + transaction[2] - amount)
-        elif str(credit) == '0':
-            # Need to add the amount to the account
-            success = accounts.set_balance(acct, accounts.get_balance(acct) - transaction[2] + amount)
+    acct_id = cur.execute('SELECT account_id FROM transactions WHERE id = ?', (trans_id,)).fetchone()[0]
+    if transaction[1] == WITHDRAWAL_ID:
+        # Add the money back
+        success = accounts.set_balance(acct_id, accounts.get_balance(acct_id) + transaction[2])
+    elif transaction[1] == DEPOSIT_ID:
+        success = accounts.set_balance(acct_id, accounts.get_balance(acct_id) - transaction[2])
+
+    # Apply new transaction effect
+    if type_id == WITHDRAWAL_ID:
+        # Need to subtract the amount from the account
+        success &= accounts.set_balance(acct_id, accounts.get_balance(acct_id) - amount)
+    elif type_id == DEPOSIT_ID:
+        # Need to add the amount to the account
+        success &= accounts.set_balance(acct_id, accounts.get_balance(acct_id) + amount)
 
     if success:
         db.commit()
@@ -347,52 +417,57 @@ def _edit_transaction(trans_id, description=None, credit=None, amount=None, budg
 
 
 def edit_transaction(trans_id):
-    '''Handler for editing a transaction record'''
+    """
+    Handler for editing a transaction record
+    """
     # Check if transaction id is valid
+    trans_id = int(trans_id)
     cur = db.cursor()
     if cur.execute(
-            'SELECT COUNT(*) FROM transactions WHERE trans_id = {}'.format(trans_id)
+            'SELECT COUNT(*) FROM transactions WHERE id = ?', (trans_id,)
     ).fetchone()[0] == 0:
         print('No transaction was found with ID `{}`'.format(trans_id))
         return
 
     # Get the current transaction record
-    transaction = cur.execute('SELECT description, credit, amount, budget_category FROM \
-        transactions WHERE trans_id = {}'.format(trans_id)).fetchone()
+    transaction = cur.execute('SELECT description, transaction_type_id, amount, category_id FROM \
+        transactions WHERE id = ?', (trans_id,)).fetchone()
 
     # Get and validate user input
     desc = input(color_input('New description ({}...): '.format(transaction[0][:6])))
     if len(desc) <= 0:
         desc = None
 
-    credit = input(color_input('Credit (withdrawal) or Debit (deposit)? (C/D): '))
-    if len(credit) <= 0:
-        credit = None
-    elif credit.lower() == 'c':
-        credit = 1
-    elif credit.lower() == 'd':
-        credit = 0
-    else:
-        print(color_error('[error]') + ' Incorrect entry for credit/debit.')
+    print('')
+    list_transaction_types()
+    type_id = input(color_input('\nSelect a Transaction Type (ID): '))
+    if len(type_id) <= 0:
+        print(color_info('Record transaction cancelled.'))
+        return
+    type_id = int(type_id)
+    if not type_exists(type_id):
+        print(color_error('[error]') + ' Invalid type ID selected.')
         return
 
-    amount = input(color_input('Transaction amount (${}): '.format(transaction[2])))
+    amount = input(color_input('Transaction amount (${}): '.format(utils.atomic_to_float(transaction[2]))))
     if len(amount) <= 0:
         amount = None
     else:
         amount = float(re.sub(r'[^0-9\.]', '', amount))
 
-    category = input(color_input('Budget category ({}): '.format(transaction[3])))
-    if category.lower() in ('', 'none', 'null', 'n/a'):
-        category = None
+    print('')
+    category.print_list()  # Prints out available categories
+    category_id = input(color_input('Category ID: '))
+    if category_id.lower() in ('', 'none', 'null', 'n/a'):
+        category_id = None
     else:
-        cur.execute('SELECT COUNT(*) FROM budget_categories WHERE category_name = "{}"'.format(category))
-        if cur.fetchone()[0] == 0:
-            print(color_error('[error]') + ' No budget category was found under the name `{}`'.format(category))
+        category_id = int(category_id)
+        if not category.get(category_id):
+            print(color_error('[error]') + ' No category was found under the ID `{}`'.format(category_id))
             return
 
     # Call the helper function
-    success = _edit_transaction(trans_id, desc, credit, amount, category)
+    success = _edit_transaction(trans_id, desc, type_id, utils.float_to_atomic(amount), category_id)
     if success:
         db.commit()
         print(color_success('Transaction updated'))

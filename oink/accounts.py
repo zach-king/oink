@@ -238,7 +238,7 @@ def set_balance(acct, new_balance):
     """
     Quickly set the balance of an account.
     If `acct` is a string, searches by name;
-    if `acct` is an integer, searches by account number.
+    if `acct` is an integer, searches by account ID.
     If the account was not found, returns False; otherwise, True.
     """
     cur = db.cursor()
@@ -268,5 +268,4 @@ def exists(acct):
     Helper function to check if an account exists
     """
     cur = db.cursor()
-    return cur.execute('SELECT COUNT(*) FROM accounts WHERE id = ?'.format(
-        acct)).fetchone()[0] != 0
+    return cur.execute('SELECT COUNT(*) FROM accounts WHERE id = ?', (acct,)).fetchone()[0] != 0
