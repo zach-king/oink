@@ -231,6 +231,7 @@ def list_transactions(account_id=None, num=10):
     if account_id in (None, '*'):
         list_all_transactions(num)
         return
+    account_id = int(account_id)
 
     if num in (None, '*'):
         num = -1
@@ -247,8 +248,9 @@ def list_transactions(account_id=None, num=10):
         LEFT JOIN accounts account ON transactions.account_id = account.id \
         LEFT JOIN transaction_types type ON transactions.transaction_type_id = type.id \
         LEFT JOIN categories category ON transactions.category_id = category.id \
+        WHERE transactions.account_id = ? \
         ORDER BY transactions.created_at DESC, transactions.id DESC \
-        LIMIT ?', (num,))
+        LIMIT ?', (account_id, num,))
     rows = cur.fetchall()
 
     # Place (+/-) in front of amount in response to credit/debit
