@@ -33,7 +33,10 @@ def strfmoney(value):
     (e.g. 410 => "4.10")
     """
     if isinstance(value, int):
-        return str(float(value / 100))
+        s = str(float(value / 100))
+        if len(s.split('.', 1)[1]) == 1:
+            s += '0'
+        return s
     else:
         return str(value)
 

@@ -85,13 +85,10 @@ def register_commands():
 
     # Budget commands
     router.register('header', 'Budget', None)
-    router.register('ab', 'Add budget category', budget.create_budget)
-    router.register('lb [mm] [yyyy]', 'List all budget categories for a month. ' + \
-        'Defaults to current month', budget.list_budget)
-    router.register('sb <category> <amount>', 'Set budget ' + \
-        'category amount', budget.set_budget)
-    router.register('rb <oldname> [newname]', 'Rename a budget category', budget.rename_budget)
-    router.register('db <category>', 'Delete a budget category', budget.delete_budget)
+    router.register('ab <account>', 'Add new budget for an account', budget.new)
+    router.register('lb [mm] [yyyy]', 'List all budget categories for a month/year. ' + \
+        'Defaults to current month and year', budget.list_budget)
+    router.register('db <budget_id>', 'Delete a budget', budget.delete_budget)
     router.register('separator', None, None)
 
     router.register('header', 'Report', None)
