@@ -28,34 +28,52 @@ __Accounts__
 
 - `la` - List all bank accounts and their details.
 - `aa` - Add a new bank account.
-- `da <name>` - Delete a bank account.
-
-__Budget__
-
-- `ab` - Add new budget category.
-- `lb [mm] [yyyy]` - List all budget categories for a month. Defaults to current month.
-- `sb <category> <amount>` - Set budget category amount for the current month.
-- `rb <oldname> <newname>` - Change budget category name.
-- `db <category>` - Delete budget category.
+- `ra` - Rename a bank account.
+- `da <id>` - Delete a bank account.
 
 __Transactions__
 
-- `lt [account] [num]` - List [num] recent transactions for account. Defaults to 10.
 - `at` - Record a new transaction.
-- `ar [source] [dest] [amount]` - Add transfer transaction between two accounts.
+- `lt [account] [num]` - List `[num]` recent transactions for account. Defaults to 10. `lt * *` to list *all* transactions for *all* accounts.
+- `ar <amount> <source_account> <destination_account>` - Add transfer transaction between two accounts.
 - `et <id>` - Edit a transaction.
 - `dt <id>` - Delete a transaction.
 
+__Categories__
+
+- `ac <name>` - Add new category for budgeting and grouping transactions.
+- `lc` - List all categories
+- `rc <name> <new_name>` - Rename a category
+- `dc <id>` - delete a category
+
+__Budgets__
+- `ab <account_id>` - Add new budget for an account
+- `lb [month] [year]` - List budgets for all accounts. Use `[month]` and `[year]` to filter for specific months.
+- `db <id>` - Delete a budget
+
 __Reports__
 
-- `rep <account> <file> [format]` - Generate a report in the specified format, and save it to a file. Currently only supports TXT. Formats CSV, HTML, and PDF coming very soon.
+- `rep <file> <from_date> [to_date] [format]` - Generate a report for a date range. Default is from `<from_date>` to the current date. If no `<format>` is specified, will attempt to infer the format based on the file extension. Date formats are in the YYYY-mm-dd format (e.g. `2018-06-23`).
 
 
 ## TODO
+Please be aware this project is still incubating and has not
+yet reached a fully stable release. Below are some of
+my top-priority tasks (in an arbitrary order albeit) for Oink:
 
-- Write unit tests for budget
-- Write unit tests for transactions
-- Add tab completion to command input
-- Implement CSV report generation
-- Implement PDF report generation
-- Refactor budget table to have a PK of (name, account, month) to support same-name categories for different accounts
+- [ ] Write base unit tests
+- [x] Add tab completion to command input
+- [ ] Implement CSV report support
+- [ ] Implement PDF report support
+- [x] Implement JSON report support
+- [x] Implement TXT report support
+- [ ] Implement MarkDown report support
+- [ ] Implement HTML report support
+- [ ] Add support for recurring transactions
+- [ ] Add new transaction type for transfer transactions
+- [ ] Add category-transaction breakdown to reports
+- [ ] Add support for Oink to be run as traditional CLI (e.g. `oink <command> <args> [opts]`)
+- [ ] Persist command history between sessions
+- [ ] Automatic budget renewals per month
+- [ ] Automatic report generation per month
+- [ ] OS push notifications
