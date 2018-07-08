@@ -1,9 +1,11 @@
 from setuptools import setup
 
-setup(name='oink',
+setup(
+    name='oink',
       version='0.3.0',
       description='A CLI budgeting tools for nerds.',
       url='http://github.com/zach-king/oink',
+      download_url = 'https://github.com/zcking/oink/archive/0.3.0.tar.gz',
       author='Zachary King',
       author_email='kingzach77@gmail.com',
       entry_points = {
@@ -15,4 +17,5 @@ setup(name='oink',
         'click',
         'tabulate',
       ],
-      zip_safe=False)
+      zip_safe=False,
+)
