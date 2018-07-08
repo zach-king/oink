@@ -410,7 +410,7 @@ def _edit_transaction(trans_id, description=None, type_id=None, amount=None, cat
         description = transaction[0]
     if type_id is None:
         type_id = transaction[1]
-    if amount is None:
+    if not amount and amount != 0:
         amount = transaction[2]
     if category_id is None:
         category_id = transaction[3]
@@ -498,7 +498,7 @@ def edit_transaction(trans_id):
             return
 
     # Call the helper function
-    success = _edit_transaction(trans_id, desc, type_id, utils.float_to_atomic(amount), category_id)
+    success = _edit_transaction(trans_id, desc, type_id, utils.float_to_atomic(amount) if amount else None, category_id)
     if success:
         db.commit()
         print(color_success('Transaction updated'))

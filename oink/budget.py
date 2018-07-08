@@ -96,7 +96,7 @@ def setup():
             REFERENCES categories (id)
             ON UPDATE CASCADE
             ON DELETE NO ACTION,
-        UNIQUE(month, year)
+        UNIQUE(account_id, category_id, month, year)
     );
     '''
 
