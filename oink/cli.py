@@ -92,8 +92,7 @@ def register_commands():
     router.register('separator', None, None)
 
     router.register('header', 'Report', None)
-    router.register('rep <from_date> <to_date> <file> [format]', 'Generate a report for a date range; ' + \
-        'supported formats are txt, json, csv, html, md, and pdf.', reports.report)
+    router.register('rep <from_date> <to_date> <file> [format]', 'Generate a report for a date range; ', reports.report)
     router.register('separator', None, None)
 
     router.register('q', 'Quit Oink', quit_oink)

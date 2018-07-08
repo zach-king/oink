@@ -24,11 +24,29 @@ class Budget(object):
         self.balance = get_balance(self)
 
 
-def list_for_account(account_id):
+def list_for_account(account_id, from_date='0000-00-00', to_date='9999-99-99'):
+    # Parse months and years from arguments
+    from_date = from_date.split('-')
+    if len(from_date) > 1:
+        from_year, from_month = [int(x) for x in from_date[:2]]
+    else:
+        from_year = int(from_date[0])
+        from_month = 0
+    to_date = to_date.split('-')
+    if len(to_date) > 1:
+        to_year, to_month = [int(x) for x in to_date[:2]]
+    else:
+        to_year = int(to_date[0])
+        to_month = 12
+    print(f'From {from_year}-{from_month} to {to_year}-{to_month}')
+
     cur = db.cursor()
     buds = cur.execute('SELECT b.id, b.account_id, c.id, c.name, b.amount, b.year, b.month, b.created_at \
-        FROM budgets b LEFT JOIN categories c ON b.category_id = c.id \
-        WHERE b.account_id = ? ORDER BY b.year, b.month', (account_id,)).fetchall()
+        FROM budgets b \
+        LEFT JOIN categories c ON b.category_id = c.id \
+        WHERE b.account_id = ? AND b.year BETWEEN ? AND ? \
+        AND b.month BETWEEN ? AND ? \
+        ORDER BY b.year, b.month', (account_id, from_year, to_year, from_month, to_month,)).fetchall()
     return [Budget(*row) for row in buds]
 
 

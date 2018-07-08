@@ -1,10 +1,10 @@
-'''
+"""
 File: reports.py
 Author: Zachary King
 
 Contains handlers for reporting commands.
 Reports curated budgeting information to file.
-'''
+"""
 
 from .. import accounts, budget, transactions, db, colorize, category, utils
 from . import _txt, _html, _json
@@ -17,7 +17,7 @@ from tabulate import tabulate
 
 locale.setlocale(locale.LC_ALL, '')
 
-VALID_FORMATS = ('txt', 'csv', 'json', 'html', 'md', 'pdf',)
+VALID_FORMATS = ('txt', 'json',)  # TODO: add support for 'csv', 'html', 'md', 'pdf',)
 
 
 def report(from_date, to_date, path, fmt=None, month=datetime.datetime.now().month, year=datetime.datetime.now().year):
@@ -87,7 +87,7 @@ def report(from_date, to_date, path, fmt=None, month=datetime.datetime.now().mon
 
 
 def _report_txt(from_date, to_date, path):
-    _txt.generate_text_report(from_date, to_date, path)
+    _txt.generate_report(from_date, to_date, path)
 
 
 def _report_json(from_date, to_date, path):
@@ -99,7 +99,8 @@ def _report_csv(acct_id, acct_name, path):
 
 
 def _report_html(acct_id, acct_name, path):
-    _html.generate_html_report(acct_id, acct_name, path)
+    # _html.generate_html_report(acct_id, acct_name, path)
+    pass
 
 
 def _report_pdf(acct_id, acct_name, path):
@@ -129,11 +130,21 @@ def generate_report_data(from_date, to_date):
             'id': account.id,
             'account_number': account.account_number,
             'name': account.name,
-            'balance': account.balance,
             'created_at': account.created_at,
             'transactions': {},
             'budgets': {},
         }
+
+        # Need to adjust the balance of the account to
+        # reflect the balance at the end of the given `to_date`
+        future_totals_query = 'SELECT SUM(amount) FROM transactions \
+            WHERE account_id = ? AND transaction_type_id = ? \
+            AND created_at > ?;'
+        future_income = cur.execute(future_totals_query, (account.id, transactions.DEPOSIT_ID, to_date)).fetchone()[0]
+        future_income = future_income if future_income is not None else 0
+        future_expenses = cur.execute(future_totals_query, (account.id, transactions.WITHDRAWAL_ID, to_date)).fetchone()[0]
+        future_expenses = future_expenses if future_expenses is not None else 0
+        acct_data['balance'] = account.balance - future_income + future_expenses  # "Undoes" the transaction effects beyond to_date
 
         totals_query = 'SELECT SUM(amount) FROM transactions \
             WHERE account_id = ? AND transaction_type_id = ? \
@@ -151,7 +162,7 @@ def generate_report_data(from_date, to_date):
         acct_data['total_revenue'] = utils.format_money(acct_data['total_revenue'])
 
         # Fetch and build transaction data for account
-        transacts = transactions.list_for_account(account.id)
+        transacts = transactions.list_for_account(account.id, from_date=from_date, to_date=to_date)
         for trans in transacts:
             trans_data = {
                 'id': trans.id,
@@ -170,7 +181,7 @@ def generate_report_data(from_date, to_date):
             acct_data['transactions'][trans.id] = trans_data
 
         # Fetch and build budget data for account
-        buds = budget.list_for_account(account.id)
+        buds = budget.list_for_account(account.id, from_date=from_date, to_date=to_date)
         for bud in buds:
             bud_data  = {
                 'id': bud.id,

@@ -35,12 +35,14 @@ class Transaction(object):
         self.created_at = created_at
 
 
-def list_for_account(account_id):
+def list_for_account(account_id, from_date='0000-00-00', to_date='9999-99-99'):
     cur = db.cursor()
     transacts = cur.execute('SELECT t.id, t.account_id, tt.id, tt.name, t.description, t.amount, c.id, c.name, t.created_at \
-        FROM transactions t LEFT JOIN transaction_types tt ON t.transaction_type_id = tt.id \
+        FROM transactions t \
+        LEFT JOIN transaction_types tt ON t.transaction_type_id = tt.id \
         LEFT JOIN categories c ON t.category_id = c.id \
-        WHERE t.account_id = ? ORDER BY t.created_at', (account_id,)).fetchall()
+        WHERE t.account_id = ? AND t.created_at BETWEEN ? AND ? \
+        ORDER BY t.created_at', (account_id, from_date, to_date,)).fetchall()
     trans = [Transaction(*row) for row in transacts]
     return trans
 

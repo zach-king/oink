@@ -17,6 +17,8 @@ def connect(path):
     '''
     global conn
     conn = sqlite3.connect(os.path.join(path, 'oink.db'))
+    if os.environ.get('DEBUG', ''):
+        conn.set_trace_callback(print) # prints queries; useful for development
 
     # Enable foreign key support
     cur = conn.cursor()
