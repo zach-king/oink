@@ -12,6 +12,51 @@ from . import db, utils, category, accounts, transactions
 from .colorize import color_error, color_info, color_input, color_success, colorize_headers, colorize, colorize_list
 
 
+class Budget(object):
+    def __init__(self, id, account_id, category_id, category_name, amount, year, month, created_at):
+        self.id = id
+        self.account_id = account_id
+        self.category = category.Category(category_id, category_name)
+        self.amount = amount
+        self.year = year
+        self.month = month
+        self.created_at = created_at
+        self.balance = get_balance(self)
+
+
+def list_for_account(account_id):
+    cur = db.cursor()
+    buds = cur.execute('SELECT b.id, b.account_id, c.id, c.name, b.amount, b.year, b.month, b.created_at \
+        FROM budgets b LEFT JOIN categories c ON b.category_id = c.id \
+        WHERE b.account_id = ? ORDER BY b.year, b.month', (account_id,)).fetchall()
+    return [Budget(*row) for row in buds]
+
+
+def get_balance(budget):
+    transaction_query = 'SELECT transaction_type_id, amount FROM transactions \
+        WHERE account_id = ? AND category_id = ? AND created_at BETWEEN ? AND ?'
+    month = budget.month
+    year = budget.year
+    next_month = month + 1
+    t_month = '0' + str(month) if len(str(month)) == 1 else str(month)
+    next_month = month + 1 if month < 12 else 1
+    t_next_month = '0' + str(next_month) if len(str(next_month)) == 1 else str(next_month)
+    t_year = str(year)
+    t_next_year = t_year if next_month != 1 else str(year + 1)
+
+    result = budget.amount
+    trans = db.cursor().execute(transaction_query, (budget.account_id, budget.category.id, f'{t_year}-{t_month}', f'{t_next_year}-{t_next_month}'))
+    for transaction in trans:
+        type_id = transaction[0]
+        amount = transaction[1]
+        if type_id == transactions.WITHDRAWAL_ID:
+            result -= amount
+        elif type_id == transactions.DEPOSIT_ID:
+            result += amount
+
+    return result
+
+
 def setup():
     """
     Setup budgeting table(s).

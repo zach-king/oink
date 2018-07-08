@@ -17,6 +17,12 @@ from .colorize import colorize, colorize_headers, colorize_list
 from .colorize import color_input, color_error, color_info, color_success
 
 
+class Category(object):
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
+
 def setup():
     """
     Initial database setup; creates the `accounts` table

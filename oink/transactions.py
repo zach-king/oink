@@ -18,6 +18,33 @@ DEPOSIT_ID = 0
 WITHDRAWAL_ID = 1
 
 
+class TransactionType(object):
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
+
+class Transaction(object):
+    def __init__(self, id, account_id, transaction_type_id, transaction_type_name, description, amount, category_id, category_name, created_at):
+        self.id = id
+        self.account_id = account_id
+        self.transaction_type = TransactionType(transaction_type_id, transaction_type_name)
+        self.description = description
+        self.amount = amount
+        self.category = category.Category(category_id, category_name)
+        self.created_at = created_at
+
+
+def list_for_account(account_id):
+    cur = db.cursor()
+    transacts = cur.execute('SELECT t.id, t.account_id, tt.id, tt.name, t.description, t.amount, c.id, c.name, t.created_at \
+        FROM transactions t LEFT JOIN transaction_types tt ON t.transaction_type_id = tt.id \
+        LEFT JOIN categories c ON t.category_id = c.id \
+        WHERE t.account_id = ? ORDER BY t.created_at', (account_id,)).fetchall()
+    trans = [Transaction(*row) for row in transacts]
+    return trans
+
+
 def setup():
     """
     Initial database setup; creates the `transactions` table

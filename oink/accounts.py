@@ -269,3 +269,27 @@ def exists(acct):
     """
     cur = db.cursor()
     return cur.execute('SELECT COUNT(*) FROM accounts WHERE id = ?', (acct,)).fetchone()[0] != 0
+
+
+class Account(object):
+    def __init__(self, id, account_number, name, balance, created_at):
+        self.id = id
+        self.account_number = account_number
+        self.name = name
+        self.balance = balance
+        self.created_at = created_at
+
+
+def get(account_id):
+    cur = db.cursor()
+    acct = cur.execute('SELECT id, account_number, name, balance, created_at \
+        FROM accounts WHERE id = ?', (account_id,)).fetchone()
+    return Account(*acct)
+
+
+def all():
+    cur = db.cursor()
+    rows = cur.execute('SELECT id, account_number, name, balance, created_at \
+        FROM accounts ORDER BY id').fetchall()
+    accounts = [Account(*row) for row in rows]
+    return accounts
