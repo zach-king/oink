@@ -20,7 +20,7 @@ locale.setlocale(locale.LC_ALL, '')
 VALID_FORMATS = ('txt', 'json',)  # TODO: add support for 'csv', 'html', 'md', 'pdf',)
 
 
-def report(from_date, to_date, path, fmt=None, month=datetime.datetime.now().month, year=datetime.datetime.now().year):
+def report(path, from_date, to_date='9999-99-99', fmt=None, month=datetime.datetime.now().month, year=datetime.datetime.now().year):
     """
     Root handler for the report command
     """

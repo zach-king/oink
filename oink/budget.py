@@ -38,7 +38,6 @@ def list_for_account(account_id, from_date='0000-00-00', to_date='9999-99-99'):
     else:
         to_year = int(to_date[0])
         to_month = 12
-    print(f'From {from_year}-{from_month} to {to_year}-{to_month}')
 
     cur = db.cursor()
     buds = cur.execute('SELECT b.id, b.account_id, c.id, c.name, b.amount, b.year, b.month, b.created_at \
